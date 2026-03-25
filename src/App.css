@@ -1,0 +1,376 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+/* Header */
+.header {
+  background: var(--primary);
+  color: white;
+  padding: 20px 20px 16px;
+  text-align: center;
+}
+
+.header h1 {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.header p {
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+/* Step indicator */
+.steps-indicator {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 20px;
+  background: var(--card-bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.step-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: all 0.3s;
+}
+
+.step-dot.active {
+  background: var(--primary);
+  transform: scale(1.2);
+}
+
+.step-dot.done {
+  background: var(--success);
+}
+
+/* Content area */
+.content {
+  flex: 1;
+  padding: 20px;
+}
+
+.card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.card h2 {
+  font-size: 17px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+/* Name Input */
+.name-input-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.name-input-row input {
+  flex: 1;
+  padding: 12px 14px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 15px;
+  transition: border-color 0.2s;
+}
+
+.name-input-row input:focus {
+  border-color: var(--primary);
+}
+
+.name-input-row button {
+  padding: 12px 20px;
+  background: var(--primary);
+  color: white;
+  border-radius: var(--radius);
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+
+.name-input-row button:active {
+  background: var(--primary-dark);
+}
+
+.names-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 40px;
+}
+
+.name-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--primary-light);
+  color: var(--primary);
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  animation: fadeIn 0.2s ease;
+}
+
+.name-tag button {
+  background: none;
+  color: var(--primary);
+  font-size: 16px;
+  padding: 0;
+  line-height: 1;
+  opacity: 0.6;
+}
+
+.name-tag button:hover {
+  opacity: 1;
+}
+
+.names-count {
+  font-size: 13px;
+  color: var(--text-light);
+  margin-top: 12px;
+}
+
+/* Buttons */
+.btn {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  border-radius: var(--radius);
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: white;
+}
+
+.btn-primary:active {
+  background: var(--primary-dark);
+}
+
+.btn-primary:disabled {
+  background: #B8B5E0;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--primary);
+  border: 2px solid var(--primary);
+}
+
+.btn-secondary:active {
+  background: var(--primary-light);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--text-light);
+  border: 2px solid var(--border);
+}
+
+.btn-outline:active {
+  background: var(--bg);
+}
+
+.btn-danger {
+  background: var(--danger);
+  color: white;
+}
+
+.btn-success {
+  background: var(--success);
+  color: white;
+}
+
+.btn-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+/* Shuffle Animation */
+.shuffle-container {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.shuffle-display {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--primary);
+  height: 40px;
+  margin-bottom: 16px;
+}
+
+.shuffle-progress {
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+  max-width: 200px;
+  margin: 0 auto;
+}
+
+.shuffle-progress-bar {
+  height: 100%;
+  background: var(--primary);
+  border-radius: 2px;
+  transition: width 0.1s linear;
+}
+
+/* Result Cards */
+.result-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.result-card {
+  display: flex;
+  align-items: center;
+  padding: 14px 16px;
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  animation: slideIn 0.4s ease;
+}
+
+.result-card .role {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+  background: var(--primary-light);
+  padding: 4px 10px;
+  border-radius: 6px;
+  margin-right: 12px;
+  min-width: 64px;
+  text-align: center;
+}
+
+.result-card .role.pass {
+  color: var(--text-light);
+  background: var(--bg);
+}
+
+.result-card .name {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+/* Sharing notes */
+.sharing-item {
+  margin-bottom: 14px;
+}
+
+.sharing-item label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--primary);
+}
+
+.sharing-item textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 14px;
+  resize: vertical;
+  min-height: 60px;
+  transition: border-color 0.2s;
+  line-height: 1.5;
+}
+
+.sharing-item textarea:focus {
+  border-color: var(--primary);
+}
+
+.save-indicator {
+  font-size: 12px;
+  color: var(--success);
+  text-align: right;
+  margin-top: 4px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.save-indicator.visible {
+  opacity: 1;
+}
+
+/* Form step */
+.form-preview {
+  background: var(--bg);
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.form-preview .label {
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.form-preview .value {
+  color: var(--text-light);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.form-preview + .form-preview {
+  margin-top: -8px;
+}
+
+.copy-toast {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--text);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 14px;
+  animation: fadeInUp 0.3s ease;
+  z-index: 100;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translate(-50%, 10px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
