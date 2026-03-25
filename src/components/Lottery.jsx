@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 
 const ROLES_BY_COUNT = {
   4: ['첫기도', '끝기도', '기도정리', '질문자'],
@@ -23,13 +23,13 @@ function shuffle(arr) {
   return a;
 }
 
-export default function Lottery({ names, onResult, onReShuffle }) {
-  const [phase, setPhase] = useState('shuffling'); // shuffling | done
+export default function Lottery({ names, initialResults, onResult, onReShuffle }) {
+  const hasInitial = initialResults && initialResults.length > 0;
+  const [phase, setPhase] = useState(hasInitial ? 'done' : 'shuffling');
   const [shuffleDisplay, setShuffleDisplay] = useState('');
   const [progress, setProgress] = useState(0);
-  const [results, setResults] = useState([]);
-  const [visibleCount, setVisibleCount] = useState(0);
-  const animRef = useRef(null);
+  const [results, setResults] = useState(hasInitial ? initialResults : []);
+  const [visibleCount, setVisibleCount] = useState(hasInitial ? initialResults.length : 0);
 
   useEffect(() => {
     if (phase !== 'shuffling') return;
