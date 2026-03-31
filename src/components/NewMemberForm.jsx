@@ -130,6 +130,7 @@ export default function NewMemberForm({ onBack }) {
             <label className="nm-label">휴대폰 번호 <span className="nm-required">*</span></label>
             <input
               type="tel"
+              inputMode="numeric"
               className="nm-input"
               placeholder="010-0000-0000"
               value={form.phone}

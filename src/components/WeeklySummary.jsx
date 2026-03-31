@@ -1,8 +1,5 @@
-import { useAuth } from '../context/AuthContext';
-
 export default function WeeklySummary({ weeklyData, onEditAttendance, onEditSharing, onEditAll }) {
-  const { user } = useAuth();
-  const { attendees = [], absences = [], sharing = [], prayers = [], notes = '' } = weeklyData;
+  const { attendees = [], absences = [], sharing = [], prayers = [], notes = '' } = weeklyData || {};
 
   const attendeeNames = attendees.join(', ');
   const absenceText = absences.map(a => `${a.name} - ${a.reason}`).join('\n');

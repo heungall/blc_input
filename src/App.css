@@ -340,7 +340,8 @@
 .form-preview .value {
   color: var(--text-light);
   white-space: pre-wrap;
-  word-break: break-all;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .form-preview + .form-preview {
@@ -349,7 +350,7 @@
 
 .copy-toast {
   position: fixed;
-  bottom: 30px;
+  bottom: max(30px, calc(env(safe-area-inset-bottom) + 20px));
   left: 50%;
   transform: translateX(-50%);
   background: var(--text);
@@ -470,9 +471,9 @@
   background: rgba(255, 255, 255, 0.2);
   color: white;
   border-radius: 50%;
-  width: 28px;
-  height: 28px;
-  font-size: 12px;
+  width: 44px;
+  height: 44px;
+  font-size: 14px;
   display: flex;
   align-items: center;
   justify-content: center;

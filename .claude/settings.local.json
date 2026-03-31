@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(npx vite:*)",
-      "WebFetch(domain:docs.google.com)"
+      "WebFetch(domain:docs.google.com)",
+      "Bash(source ~/.nvm/nvm.sh)",
+      "Bash(npm run:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }

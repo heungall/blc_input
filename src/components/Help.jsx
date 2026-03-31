@@ -92,7 +92,7 @@ export default function Help({ onClose, userRole }) {
       {sections.map(section => (
         <div className="card help-section" key={section.id}>
           <h3 className="help-section-title">
-            <span dangerouslySetInnerHTML={{ __html: section.icon }} />{' '}
+            <span>{section.icon}</span>{' '}
             {section.title}
           </h3>
           <div className="help-items">

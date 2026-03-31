@@ -54,7 +54,8 @@ function AppContent({ onBackToLanding }) {
       const absenceMap = {};
       (weekly.absences || []).forEach(a => { absenceMap[a.name] = a.reason; });
 
-      const allNames = new Set([...user.members, ...attendeeSet, ...Object.keys(absenceMap)]);
+      // [SECURE] 현재 활성 멤버만 포함 — 비활성화된 멤버 재출현 방지
+      const allNames = new Set(user.members);
       allNames.forEach(name => {
         if (absenceMap[name] !== undefined) {
           init[name] = { present: false, reason: absenceMap[name] };
@@ -144,7 +145,6 @@ function AppContent({ onBackToLanding }) {
           prayers: weekly.prayers || [],
           notes: weekly.notes || '',
         };
-        user.weeklyData = latestWeekly.current;
         setStep(-1);
       }
     } catch (err) {
@@ -177,7 +177,6 @@ function AppContent({ onBackToLanding }) {
     // 최신 데이터로 갱신
     if (submittedData) {
       latestWeekly.current = submittedData;
-      user.weeklyData = submittedData;
       restoreSharingToLocalStorage(submittedData);
     }
     setStep(-1);

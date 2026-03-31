@@ -38,7 +38,6 @@ export default function Login() {
     try {
       // Apps Script에서 토큰 검증 + 소속 셀 + 멤버 목록 조회
       const result = await loginWithToken(idToken);
-      console.log('Login response:', JSON.stringify(result));
       if (result.error) {
         setError(result.error);
         return;
@@ -47,7 +46,7 @@ export default function Login() {
     } catch (err) {
       // [SECURE] 내부 오류 노출 금지
       setError('로그인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
-      console.error('Login error:', err);
+      if (import.meta.env.DEV) console.error('Login error:', err);
     } finally {
       setLoading(false);
     }

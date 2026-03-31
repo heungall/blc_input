@@ -241,7 +241,9 @@ function OverviewSection({ cells, members, attendance }) {
   }, [cellStats]);
 
   const currentMonday = getCurrentWeekMonday();
-  const weekLabel = `${currentMonday.getMonth() + 1}/${currentMonday.getDate()} ~ ${currentMonday.getMonth() + 1}/${currentMonday.getDate() + 6}`;
+  const currentSunday = new Date(currentMonday);
+  currentSunday.setDate(currentSunday.getDate() + 6);
+  const weekLabel = `${currentMonday.getMonth() + 1}/${currentMonday.getDate()} ~ ${currentSunday.getMonth() + 1}/${currentSunday.getDate()}`;
 
   return (
     <>
@@ -715,7 +717,6 @@ function StatusSection({ cells, members, submissions, selectedCell, setSelectedC
 
 function SettingsSection() {
   const { user } = useAuth();
-  const [settings, setSettings] = useState({});
   const [motto, setMotto] = useState('');
   const [year, setYear] = useState('');
   const [saving, setSaving] = useState(false);
@@ -723,7 +724,6 @@ function SettingsSection() {
 
   useEffect(() => {
     getSettings().then(s => {
-      setSettings(s);
       setMotto(s.motto || '');
       setYear(s.year || '');
     }).catch(() => {});
