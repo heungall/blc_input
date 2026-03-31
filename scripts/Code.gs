@@ -454,7 +454,7 @@ function getAdminCellId() {
   for (var i = 1; i < rows.length; i++) {
     if (rows[i][3] === 'admin') return rows[i][0];
   }
-  return 'cell_00'; // fallback
+  return 'cell_99'; // fallback
 }
 
 /**
