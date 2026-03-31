@@ -659,6 +659,133 @@
   margin-bottom: 10px;
 }
 
+/* Bulk input */
+.bulk-buttons {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.bulk-btn {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+  background: var(--primary-light);
+  transition: background 0.2s;
+}
+
+.bulk-btn:active {
+  background: var(--primary);
+  color: white;
+}
+
+.bulk-input-area {
+  background: var(--bg);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 20px;
+  border: 2px solid var(--primary-light);
+}
+
+.bulk-input-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.bulk-input-header h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.bulk-close {
+  background: none;
+  font-size: 20px;
+  color: var(--text-light);
+  padding: 0 4px;
+}
+
+.bulk-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 14px;
+  resize: vertical;
+  min-height: 100px;
+  line-height: 1.6;
+  margin-bottom: 10px;
+  transition: border-color 0.2s;
+}
+
+.bulk-textarea:focus {
+  border-color: var(--primary);
+}
+
+.bulk-parse-btn {
+  padding: 10px !important;
+  font-size: 14px !important;
+}
+
+.bulk-preview {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.bulk-preview h4 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: var(--text);
+}
+
+.bulk-preview-item {
+  display: flex;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.bulk-preview-item:last-of-type {
+  border-bottom: none;
+}
+
+.bulk-preview-name {
+  font-weight: 600;
+  color: var(--primary);
+  white-space: nowrap;
+  min-width: 50px;
+}
+
+.bulk-preview-content {
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.bulk-no-match {
+  font-size: 13px;
+  color: var(--danger);
+  line-height: 1.5;
+}
+
+.bulk-unmatched {
+  font-size: 12px;
+  color: var(--text-light);
+  margin-top: 8px;
+}
+
+.bulk-apply-btn {
+  margin-top: 12px;
+  padding: 12px !important;
+}
+
 /* Submit */
 .notes-input {
   width: 100%;
