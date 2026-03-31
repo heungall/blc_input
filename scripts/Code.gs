@@ -91,16 +91,22 @@ function doPost(e) {
 
     if (action === 'addMember') {
       // [SECURE] 입력값 검증
-      const name   = sanitizeName(data.name);
-      const cellId = sanitizeCellId(data.cellId);
+      var name   = sanitizeName(data.name);
+      var cellId = sanitizeCellId(data.cellId);
       if (!name || !cellId) return respond({ error: '유효하지 않은 입력값입니다.' });
+      // [SECURE] 본인 셀만 멤버 추가 가능 — 다른 셀 변조 방지
+      var callerCell = getCell(email);
+      if (callerCell.error || callerCell.cellId !== cellId) return respond({ error: '본인 셀만 수정할 수 있습니다.' });
       return respond(addMember(cellId, name));
     }
 
     if (action === 'deactivateMember') {
-      const name   = sanitizeName(data.name);
-      const cellId = sanitizeCellId(data.cellId);
+      var name   = sanitizeName(data.name);
+      var cellId = sanitizeCellId(data.cellId);
       if (!name || !cellId) return respond({ error: '유효하지 않은 입력값입니다.' });
+      // [SECURE] 본인 셀만 멤버 비활성화 가능 — 다른 셀 변조 방지
+      var callerCell = getCell(email);
+      if (callerCell.error || callerCell.cellId !== cellId) return respond({ error: '본인 셀만 수정할 수 있습니다.' });
       return respond(deactivateMember(cellId, name));
     }
 
@@ -388,7 +394,7 @@ function getDashboardData(email) {
 
 /**
  * 모든 셀 정보 조회
- * @returns {Array} [{ cellId, cellName, leaderEmail }]
+ * @returns {Array} [{ cellId, cellName }]
  */
 function getAllCells() {
   var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
@@ -396,11 +402,11 @@ function getAllCells() {
   var rows  = sheet.getDataRange().getValues();
   var result = [];
 
+  // [SECURE] leaderEmail 미포함 — PII 노출 방지
   for (var i = 1; i < rows.length; i++) {
     result.push({
-      cellId:      rows[i][0],
-      cellName:    rows[i][1],
-      leaderEmail: rows[i][2]
+      cellId:   rows[i][0],
+      cellName: rows[i][1]
     });
   }
   return result;
@@ -512,8 +518,10 @@ function sanitizeCellId(val) {
 function sanitizeName(val) {
   if (!val || typeof val !== 'string') return null;
   var name = val.trim();
-  // [SECURE] 최대 20자, 특수문자 제한
-  return name.length > 0 && name.length <= 20 ? name : null;
+  // [SECURE] 최대 20자 + HTML 특수문자 차단 — Stored XSS 방지
+  if (name.length === 0 || name.length > 20) return null;
+  if (/[<>"'&]/.test(name)) return null;
+  return name;
 }
 
 // ─── 초기 시트 설정 (최초 1회 실행) ─────────────────────────────────────────
