@@ -205,7 +205,7 @@ function OverviewSection({ cells, members, attendance }) {
 
       // 출석자 수 (중복 제거)
       const presentNames = new Set(
-        cellAttendance.filter(a => a.status === 'present').map(a => a.memberName)
+        cellAttendance.filter(a => a.status === '출석').map(a => a.memberName)
       );
       const totalActive = cellMembers.length;
       const presentCount = Math.min(presentNames.size, totalActive);
@@ -375,10 +375,10 @@ function PatternSection({ cells, members, attendance, selectedCell, setSelectedC
                     const key = `${wk}|${member.cellId}|${member.name}`;
                     const status = attendanceIndex[key];
                     let symbol, className;
-                    if (status === 'present') {
+                    if (status === '출석') {
                       symbol = 'O';
                       className = 'pattern-present';
-                    } else if (status === 'absent') {
+                    } else if (status === '결석') {
                       symbol = 'X';
                       className = 'pattern-absent';
                     } else {
@@ -412,7 +412,7 @@ function ReasonsSection({ attendance, weekCount }) {
   const reasonCounts = useMemo(() => {
     const counts = { work: 0, personal: 0, travel: 0, other: 0 };
     attendance.forEach(a => {
-      if (a.status !== 'absent') return;
+      if (a.status !== '결석') return;
       const wk = dateToWeekKey(a.date);
       if (!recentWeekKeys.has(wk)) return;
       const cat = categorizeReason(a.absenceReason);
@@ -497,7 +497,7 @@ function AlertsSection({ cells, members, attendance }) {
         const key = `${wk}|${member.cellId}|${member.name}`;
         const status = idx[key];
 
-        if (status === 'absent') {
+        if (status === '결석') {
           consecutive++;
           // 가장 최근 결석 사유 저장
           if (consecutive === 1) {
@@ -506,7 +506,7 @@ function AlertsSection({ cells, members, attendance }) {
             );
             lastReason = record?.absenceReason || '';
           }
-        } else if (status === 'present') {
+        } else if (status === '출석') {
           break; // 출석이 나오면 연속 끊김
         } else {
           // 데이터 없음 — 결석으로 간주하지 않고 중단
