@@ -42,6 +42,13 @@ body {
   max-width: 960px;
 }
 
+/* :has() 미지원 브라우저 fallback */
+.dashboard-wide {
+  width: 100vw;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
 button {
   cursor: pointer;
   font-family: inherit;

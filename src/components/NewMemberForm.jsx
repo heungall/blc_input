@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { submitNewcomer } from '../services/api';
 
 const VISIT_REASONS = [
   '다닐 교회를 찾는 중',
@@ -23,9 +24,6 @@ const AFTER_OPTIONS = [
   '간단한 교회 소개',
   '이어지는 모임 참여',
 ];
-
-const FORM_RESPONSE_URL =
-  'https://docs.google.com/forms/u/0/d/e/1FAIpQLScEJEeruJWzZzJr3ZHhxQ30-S5ekJHHQWrjTP5q-ms8wdZqYQ/formResponse';
 
 export default function NewMemberForm({ onBack }) {
   const [form, setForm] = useState({
@@ -55,32 +53,28 @@ export default function NewMemberForm({ onBack }) {
     if (!isValid) return;
     setSubmitting(true);
 
-    const visitReason = form.visitReason === '__other__' ? form.visitReasonOther : form.visitReason;
-    const visitChannel = form.visitChannel === '__other__' ? form.visitChannelOther : form.visitChannel;
-
-    const params = new URLSearchParams();
-    params.set('entry.2005620554', form.name.trim());
-    params.set('entry.1045781291', form.phone.trim());
-    params.set('entry.1065046570', form.address.trim());
-    params.set('entry.1166974658', visitReason);
-    params.set('entry.943503802', visitChannel);
-    params.set('entry.728442741', form.faith);
-    params.set('entry.1387082335', form.prevChurch.trim());
-    params.set('entry.1361257112', form.heresyCheck);
-    params.set('entry.1599423648', form.afterPlan);
-    params.set('entry.1629001844', form.agree);
-
     try {
-      await fetch(FORM_RESPONSE_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: params.toString(),
+      const res = await submitNewcomer({
+        name: form.name.trim(),
+        phone: form.phone.trim(),
+        address: form.address.trim(),
+        visitReason: form.visitReason === '__other__' ? form.visitReasonOther : form.visitReason,
+        visitChannel: form.visitChannel === '__other__' ? form.visitChannelOther : form.visitChannel,
+        faith: form.faith,
+        prevChurch: form.prevChurch.trim(),
+        heresyCheck: form.heresyCheck,
+        afterPlan: form.afterPlan,
+        agree: form.agree,
       });
-      setResult({ success: true });
+      if (res.error) {
+        setResult({ error: res.error });
+      } else {
+        setResult({ success: true });
+      }
     } catch (err) {
+      // [SECURE] 내부 오류 노출 금지
       console.error('submit error:', err);
-      setResult({ error: '제출 중 오류가 발생했습니다.' });
+      setResult({ error: '제출 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.' });
     } finally {
       setSubmitting(false);
     }

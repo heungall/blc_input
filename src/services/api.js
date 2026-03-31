@@ -48,6 +48,13 @@ export async function fetchDashboard(idToken) {
   return postAction({ action: 'dashboard', idToken });
 }
 
+/**
+ * 새신자/방문자 카드 제출 (인증 불필요)
+ */
+export async function submitNewcomer(data) {
+  return postAction({ action: 'newcomer', ...data });
+}
+
 // ─── 내부 헬퍼 ──────────────────────────────────────────────────────────────
 
 async function postAction(body) {

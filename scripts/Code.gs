@@ -21,6 +21,7 @@ const SHEET_LEADER      = '셀_리더';
 const SHEET_MEMBERS     = '멤버';
 const SHEET_SUBMISSIONS = '제출기록';
 const SHEET_ATTENDANCE  = '출결';
+const SHEET_NEWCOMERS   = '새신자';
 
 // ─── 진입점 ────────────────────────────────────────────────────────────────
 
@@ -66,7 +67,12 @@ function doPost(e) {
       return respond({ error: '잘못된 요청 형식입니다.' });
     }
 
-    // [SECURE] 모든 POST 요청에 ID 토큰 인증 필수
+    // [SECURE] 새신자 등록은 인증 없이 허용 (공개 폼 대체)
+    if (data.action === 'newcomer') {
+      return respond(saveNewcomer(data));
+    }
+
+    // [SECURE] 그 외 모든 POST 요청에 ID 토큰 인증 필수
     const verified = verifyIdToken(data.idToken);
     if (!verified) return respond({ error: '인증에 실패했습니다.' });
 
@@ -492,6 +498,58 @@ function getAllSubmissions() {
   return result;
 }
 
+// ─── 새신자 등록 ────────────────────────────────────────────────────────────
+
+/**
+ * 새신자/방문자 카드 저장 (인증 불필요)
+ *
+ * data 구조:
+ * {
+ *   name, phone, address, visitReason, visitChannel,
+ *   faith, prevChurch, heresyCheck, afterPlan, agree
+ * }
+ */
+function saveNewcomer(data) {
+  // [SECURE] 필수 입력값 검증
+  var name = (data.name || '').trim();
+  var phone = (data.phone || '').trim();
+  var agree = (data.agree || '').trim();
+
+  if (!name || name.length > 50) return { error: '이름을 확인해주세요.' };
+  if (!phone || phone.length > 20) return { error: '연락처를 확인해주세요.' };
+  if (agree !== '동의') return { error: '개인정보 수집에 동의해주세요.' };
+
+  // [SECURE] HTML 특수문자 차단 — Stored XSS 방지
+  var fields = [name, phone, data.address, data.visitReason, data.visitChannel,
+                data.faith, data.prevChurch, data.heresyCheck, data.afterPlan];
+  for (var k = 0; k < fields.length; k++) {
+    if (fields[k] && /[<>"']/.test(fields[k])) {
+      return { error: '특수문자(<, >, ", \')는 사용할 수 없습니다.' };
+    }
+  }
+
+  var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = ss.getSheetByName(SHEET_NEWCOMERS);
+  var now   = new Date();
+  var date  = Utilities.formatDate(now, 'Asia/Seoul', 'yyyy-MM-dd HH:mm');
+
+  sheet.appendRow([
+    date,
+    name,
+    phone,
+    (data.address || '').trim(),
+    (data.visitReason || '').trim(),
+    (data.visitChannel || '').trim(),
+    (data.faith || '').trim(),
+    (data.prevChurch || '').trim(),
+    (data.heresyCheck || '').trim(),
+    (data.afterPlan || '').trim(),
+    agree
+  ]);
+
+  return { success: true };
+}
+
 // ─── 유틸리티 ───────────────────────────────────────────────────────────────
 
 function respond(data) {
@@ -564,6 +622,17 @@ function initSheets() {
   if (!attSheet) {
     attSheet = ss.insertSheet(SHEET_ATTENDANCE);
     attSheet.appendRow(['date', 'cell_id', 'member_name', 'status', 'absence_reason']);
+  }
+
+  // 새신자 시트
+  var ncSheet = ss.getSheetByName(SHEET_NEWCOMERS);
+  if (!ncSheet) {
+    ncSheet = ss.insertSheet(SHEET_NEWCOMERS);
+    ncSheet.appendRow([
+      'date', 'name', 'phone', 'address',
+      'visit_reason', 'visit_channel', 'faith',
+      'prev_church', 'heresy_check', 'after_plan', 'agree'
+    ]);
   }
 
   Logger.log('시트 초기화 완료');
