@@ -483,6 +483,67 @@
   background: rgba(255, 255, 255, 0.4);
 }
 
+/* ── Help ─────────────────────────────────────────────────────── */
+.help-section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+
+.help-items {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.help-item {
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.help-question {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  background: var(--bg);
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  text-align: left;
+  gap: 12px;
+  transition: background 0.2s;
+}
+
+.help-question.open {
+  background: var(--primary-light);
+  color: var(--primary);
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+
+.help-arrow {
+  font-size: 18px;
+  font-weight: 700;
+  flex-shrink: 0;
+  color: var(--text-light);
+}
+
+.help-question.open .help-arrow {
+  color: var(--primary);
+}
+
+.help-answer {
+  padding: 12px 14px;
+  background: var(--primary-light);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text);
+  border-radius: 0 0 var(--radius) var(--radius);
+}
+
 /* ── Landing Page ─────────────────────────────────────────────── */
 .landing-container {
   display: flex;

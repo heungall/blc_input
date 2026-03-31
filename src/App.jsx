@@ -11,6 +11,7 @@ import MemberManage from './components/MemberManage';
 import Dashboard from './components/Dashboard';
 import LandingPage from './components/LandingPage';
 import NewMemberForm from './components/NewMemberForm';
+import Help from './components/Help';
 import { submitRecord, fetchDashboard } from './services/api';
 
 const STEPS = ['출결 체크', '역할 추첨', '나눔 기록', '제출'];
@@ -33,6 +34,7 @@ function AppContent({ onBackToLanding }) {
   const [isEditing, setIsEditing] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const [showDashboard, setShowDashboard] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const [dashboardData, setDashboardData] = useState(null);
 
   // 최신 제출 데이터 보관 (요약 화면 + 수정 시 기존 데이터 유지)
@@ -193,11 +195,14 @@ function AppContent({ onBackToLanding }) {
         </div>
         <div className="header-user">
           {user.role === 'admin' && (
-            <button className="header-icon-btn" onClick={openDashboard} title="대시보드">
+            <button className="header-icon-btn" onClick={() => { openDashboard(); setShowMemberManage(false); setShowHelp(false); }} title="대시보드">
               &#9776;
             </button>
           )}
-          <button className="header-icon-btn" onClick={() => { setShowMemberManage(true); setShowDashboard(false); }} title="멤버 관리">
+          <button className="header-icon-btn" onClick={() => { setShowHelp(true); setShowDashboard(false); setShowMemberManage(false); }} title="도움말">
+            ?
+          </button>
+          <button className="header-icon-btn" onClick={() => { setShowMemberManage(true); setShowDashboard(false); setShowHelp(false); }} title="멤버 관리">
             &#9881;
           </button>
           <img src={user.picture} alt={user.name} className="user-avatar" />
@@ -220,14 +225,18 @@ function AppContent({ onBackToLanding }) {
       )}
 
       <div className="content">
-        {showDashboard && (
+        {showHelp && (
+          <Help onClose={() => setShowHelp(false)} userRole={user.role} />
+        )}
+
+        {!showHelp && showDashboard && (
           <Dashboard
             data={dashboardData}
             onBack={() => setShowDashboard(false)}
           />
         )}
 
-        {!showDashboard && showMemberManage && (
+        {!showHelp && !showDashboard && showMemberManage && (
           <MemberManage
             members={memberList}
             setMembers={setMemberList}
@@ -235,7 +244,7 @@ function AppContent({ onBackToLanding }) {
           />
         )}
 
-        {!showDashboard && !showMemberManage && step === -1 && (
+        {!showHelp && !showDashboard && !showMemberManage && step === -1 && (
           <WeeklySummary
             weeklyData={latestWeekly.current || user.weeklyData}
             onEditAttendance={() => setStep(0)}
@@ -244,7 +253,7 @@ function AppContent({ onBackToLanding }) {
           />
         )}
 
-        {!showDashboard && !showMemberManage && step === 0 && (
+        {!showHelp && !showDashboard && !showMemberManage && step === 0 && (
           <Attendance
             attendance={attendance}
             setAttendance={setAttendance}
@@ -256,7 +265,7 @@ function AppContent({ onBackToLanding }) {
           />
         )}
 
-        {!showDashboard && !showMemberManage && step === 1 && (
+        {!showHelp && !showDashboard && !showMemberManage && step === 1 && (
           <Lottery
             names={attendees}
             initialResults={lotteryResults}
@@ -265,7 +274,7 @@ function AppContent({ onBackToLanding }) {
           />
         )}
 
-        {!showDashboard && !showMemberManage && step === 2 && (
+        {!showHelp && !showDashboard && !showMemberManage && step === 2 && (
           <SharingPrayers
             attendees={attendees}
             onNext={handleSharingNext}
@@ -274,7 +283,7 @@ function AppContent({ onBackToLanding }) {
           />
         )}
 
-        {!showDashboard && !showMemberManage && step === 3 && (
+        {!showHelp && !showDashboard && !showMemberManage && step === 3 && (
           <Submit
             attendees={attendees}
             absences={absences}
