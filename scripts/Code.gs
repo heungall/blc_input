@@ -100,9 +100,10 @@ function doPost(e) {
       var name   = sanitizeName(data.name);
       var cellId = sanitizeCellId(data.cellId);
       if (!name || !cellId) return respond({ error: '유효하지 않은 입력값입니다.' });
-      // [SECURE] 본인 셀만 멤버 추가 가능 — 다른 셀 변조 방지
+      // [SECURE] 본인 셀 또는 admin만 멤버 추가 가능
       var callerCell = getCell(email);
-      if (callerCell.error || callerCell.cellId !== cellId) return respond({ error: '본인 셀만 수정할 수 있습니다.' });
+      if (callerCell.error) return respond({ error: '권한이 없습니다.' });
+      if (callerCell.role !== 'admin' && callerCell.cellId !== cellId) return respond({ error: '본인 셀만 수정할 수 있습니다.' });
       return respond(addMember(cellId, name));
     }
 
@@ -110,9 +111,10 @@ function doPost(e) {
       var name   = sanitizeName(data.name);
       var cellId = sanitizeCellId(data.cellId);
       if (!name || !cellId) return respond({ error: '유효하지 않은 입력값입니다.' });
-      // [SECURE] 본인 셀만 멤버 비활성화 가능 — 다른 셀 변조 방지
+      // [SECURE] 본인 셀 또는 admin만 멤버 비활성화 가능
       var callerCell = getCell(email);
-      if (callerCell.error || callerCell.cellId !== cellId) return respond({ error: '본인 셀만 수정할 수 있습니다.' });
+      if (callerCell.error) return respond({ error: '권한이 없습니다.' });
+      if (callerCell.role !== 'admin' && callerCell.cellId !== cellId) return respond({ error: '본인 셀만 수정할 수 있습니다.' });
       return respond(deactivateMember(cellId, name));
     }
 

@@ -734,6 +734,14 @@
   color: var(--text);
 }
 
+.mm-cell-filter {
+  margin-bottom: 14px;
+}
+
+.mm-add-cell {
+  margin-bottom: 12px;
+}
+
 .member-manage-actions {
   display: flex;
   gap: 6px;
