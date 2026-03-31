@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { submitRecord } from '../services/api';
 
-export default function Submit({ attendees, absences, sharing, prayers, notes: initialNotes, isEditing, onBack, onRestart }) {
+export default function Submit({ attendees, absences, sharing, prayers, notes: initialNotes, isEditing, onBack, onRestart, onDone }) {
   const { user } = useAuth();
   const [notes, setNotes] = useState(initialNotes || '');
   const [submitting, setSubmitting] = useState(false);
@@ -45,8 +45,8 @@ export default function Submit({ attendees, absences, sharing, prayers, notes: i
           </p>
         </div>
         <div className="btn-group">
-          <button className="btn btn-primary" onClick={onRestart}>
-            처음으로
+          <button className="btn btn-primary" onClick={onDone || onRestart}>
+            확인
           </button>
         </div>
       </div>

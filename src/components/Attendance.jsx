@@ -4,7 +4,7 @@ import { addMember, deactivateMember } from '../services/api';
 
 const ABSENCE_REASONS = ['회사', '개인사정', '여행'];
 
-export default function Attendance({ attendance, setAttendance, onNext, onSkipLottery }) {
+export default function Attendance({ attendance, setAttendance, onNext, onSkipLottery, isEditing, onBackToSummary }) {
   const { user } = useAuth();
   const [newName, setNewName] = useState('');
   const [adding, setAdding] = useState(false);
@@ -176,6 +176,11 @@ export default function Attendance({ attendance, setAttendance, onNext, onSkipLo
         >
           추첨 없이 넘어가기
         </button>
+        {onBackToSummary && (
+          <button className="btn btn-outline" onClick={onBackToSummary}>
+            요약으로 돌아가기
+          </button>
+        )}
       </div>
     </div>
   );

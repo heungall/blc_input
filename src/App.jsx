@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import './App.css';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './components/Login';
+import WeeklySummary from './components/WeeklySummary';
 import Attendance from './components/Attendance';
 import Lottery from './components/Lottery';
 import SharingPrayers from './components/SharingPrayers';
@@ -9,6 +10,7 @@ import Submit from './components/Submit';
 
 const STEPS = ['출결 체크', '역할 추첨', '나눔 기록', '제출'];
 
+// step: -1 = 요약(이번 주 기록 있을 때), 0~3 = 입력 흐름
 function AppContent() {
   const { user, logout } = useAuth();
   const [step, setStep] = useState(0);
@@ -18,10 +20,11 @@ function AppContent() {
   const [lotteryResults, setLotteryResults] = useState(null);
   const [sharingData, setSharingData] = useState({ sharing: [], prayers: [] });
   const [isEditing, setIsEditing] = useState(false);
+  const [initialized, setInitialized] = useState(false);
 
   // 로그인 후 멤버 목록 + 이번 주 기존 데이터로 초기화
   useEffect(() => {
-    if (!user || user.members.length === 0 || Object.keys(attendance).length > 0) return;
+    if (!user || user.members.length === 0 || initialized) return;
 
     const weekly = user.weeklyData;
     const init = {};
@@ -32,7 +35,6 @@ function AppContent() {
       const absenceMap = {};
       (weekly.absences || []).forEach(a => { absenceMap[a.name] = a.reason; });
 
-      // 멤버 목록 기준 + 기존 데이터의 결석자 포함
       const allNames = new Set([...user.members, ...attendeeSet, ...Object.keys(absenceMap)]);
       allNames.forEach(name => {
         if (absenceMap[name] !== undefined) {
@@ -44,7 +46,7 @@ function AppContent() {
         }
       });
 
-      // 나눔/기도제목도 localStorage에 복원
+      // 나눔/기도제목 localStorage에 복원
       const sharingRestore = {};
       (weekly.sharing || []).forEach(s => {
         sharingRestore[s.name] = { ...sharingRestore[s.name], sharing: s.content };
@@ -57,15 +59,17 @@ function AppContent() {
       }
 
       setIsEditing(true);
+      setStep(-1); // 요약 화면부터 시작
     } else {
-      // 새 제출 — 전원 출석으로 초기화
+      // 새 제출
       user.members.forEach(name => {
         init[name] = { present: true, reason: '' };
       });
     }
 
     setAttendance(init);
-  }, [user, attendance]);
+    setInitialized(true);
+  }, [user, initialized]);
 
   const attendees = Object.keys(attendance).filter(n => attendance[n].present);
   const absences = Object.keys(attendance)
@@ -95,6 +99,13 @@ function AppContent() {
     setAttendance(init);
     setLotteryResults(null);
     setSharingData({ sharing: [], prayers: [] });
+    setIsEditing(false);
+  };
+
+  // 제출 완료 후 요약으로 돌아가기
+  const handleSubmitDone = () => {
+    setStep(-1);
+    setIsEditing(true);
   };
 
   if (!user) return <Login />;
@@ -114,21 +125,26 @@ function AppContent() {
         </div>
       </header>
 
-      <div className="steps-indicator">
-        {STEPS.map((label, i) => (
-          <div
-            key={label}
-            className={`step-dot ${i === step ? 'active' : ''} ${i < step ? 'done' : ''}`}
-            title={label}
-          />
-        ))}
-      </div>
+      {step >= 0 && (
+        <div className="steps-indicator">
+          {STEPS.map((label, i) => (
+            <div
+              key={label}
+              className={`step-dot ${i === step ? 'active' : ''} ${i < step ? 'done' : ''}`}
+              title={label}
+            />
+          ))}
+        </div>
+      )}
 
       <div className="content">
-        {isEditing && step === 0 && (
-          <div className="edit-banner">
-            이번 주 제출된 기록이 있습니다. 수정 후 다시 제출하세요.
-          </div>
+        {step === -1 && (
+          <WeeklySummary
+            weeklyData={user.weeklyData}
+            onEditAttendance={() => setStep(0)}
+            onEditSharing={() => setStep(2)}
+            onEditAll={handleRestart}
+          />
         )}
 
         {step === 0 && (
@@ -137,6 +153,8 @@ function AppContent() {
             setAttendance={setAttendance}
             onNext={() => setStep(1)}
             onSkipLottery={() => setStep(2)}
+            isEditing={isEditing}
+            onBackToSummary={isEditing ? () => setStep(-1) : null}
           />
         )}
 
@@ -154,6 +172,7 @@ function AppContent() {
             attendees={attendees}
             onNext={handleSharingNext}
             onBack={() => setStep(lotteryResults ? 1 : 0)}
+            onBackToSummary={isEditing ? () => setStep(-1) : null}
           />
         )}
 
@@ -167,6 +186,7 @@ function AppContent() {
             isEditing={isEditing}
             onBack={() => setStep(2)}
             onRestart={handleRestart}
+            onDone={handleSubmitDone}
           />
         )}
       </div>

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 
 const STORAGE_KEY = 'blc_sharing_prayers';
 
-export default function SharingPrayers({ attendees, onNext, onBack }) {
+export default function SharingPrayers({ attendees, onNext, onBack, onBackToSummary }) {
   const [data, setData] = useState(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
@@ -90,6 +90,11 @@ export default function SharingPrayers({ attendees, onNext, onBack }) {
         <button className="btn btn-outline" onClick={onBack}>
           이전으로
         </button>
+        {onBackToSummary && (
+          <button className="btn btn-outline" onClick={onBackToSummary}>
+            요약으로 돌아가기
+          </button>
+        )}
       </div>
     </div>
   );
