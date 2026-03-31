@@ -45,10 +45,13 @@ async function postAction(body) {
     throw new Error('VITE_APPS_SCRIPT_URL 환경변수가 설정되지 않았습니다.');
   }
 
+  // [SECURE] text/plain 사용 — application/json은 CORS preflight를 유발하고
+  // Apps Script는 OPTIONS 요청을 지원하지 않음
   const res = await fetch(SCRIPT_URL, {
     method:  'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body:    JSON.stringify(body),
+    redirect: 'follow',
   });
 
   if (!res.ok) {
