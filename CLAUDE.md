@@ -39,12 +39,17 @@
 - [x] 보안 리뷰 (멀티에이전트 — FAIL 3건 수정 완료)
 - [x] Vercel 배포 완료 — https://blc-input.vercel.app
 
-## Phase 6 — 남은 작업 (백로그)
+## Phase 6 — 히스토리 + PWA
+- [x] 제출 히스토리 조회 (최근 12주, 아코디언 카드) — History.jsx
+- [x] Apps Script getHistory 액션 (인증·셀 격리) — scripts/Code.gs
+- [x] PWA 설치 지원 (manifest, 앱 아이콘 192/512px, workbox 캐싱) — vite.config.js
+
+## Phase 7 — 백로그
 - [ ] 모바일 UX 세부 점검
 - [ ] 기도제목 이월 (지난주 기도제목 불러오기)
-- [ ] 제출 히스토리 (이전 제출 기록 조회)
 - [ ] 카카오톡 공유 (역할 배정 결과)
 - [ ] 푸시 알림 (모임 전 리더에게 알림)
+- [ ] 대시보드 개선 (목사님 피드백 후)
 
 ---
 
