@@ -13,16 +13,14 @@
 // ─── 설정 ──────────────────────────────────────────────────────────────────
 
 // [SECURE] 민감 정보는 하드코딩 금지 — Script Properties에서 읽기
-const PROPS         = PropertiesService.getScriptProperties();
+const PROPS          = PropertiesService.getScriptProperties();
 const SPREADSHEET_ID = PROPS.getProperty('SPREADSHEET_ID');
-const CLIENT_ID     = PROPS.getProperty('CLIENT_ID');
+const CLIENT_ID      = PROPS.getProperty('CLIENT_ID');
 
-const FORM_RESPONSE_URL =
-  'https://docs.google.com/forms/u/0/d/e/' +
-  '1FAIpQLSfuPP24je4Axo8M8Z5XuqfwgoMasNdTmcnojGv0mSovpnq6rA/formResponse';
-
-const SHEET_LEADER  = '셀_리더';
-const SHEET_MEMBERS = '멤버';
+const SHEET_LEADER      = '셀_리더';
+const SHEET_MEMBERS     = '멤버';
+const SHEET_SUBMISSIONS = '제출기록';
+const SHEET_ATTENDANCE  = '출결';
 
 // ─── 진입점 ────────────────────────────────────────────────────────────────
 
@@ -57,7 +55,7 @@ function doGet(e) {
 }
 
 /**
- * POST — 쓰기 / 폼 제출 (모두 ID 토큰 인증 필수)
+ * POST — 쓰기 (모두 ID 토큰 인증 필수)
  * { action, idToken, ...payload }
  */
 function doPost(e) {
@@ -78,7 +76,6 @@ function doPost(e) {
     const action = data.action;
 
     if (action === 'login') {
-      // 로그인 — 소속 셀 조회 후 반환
       const cellInfo = getCell(email);
       if (cellInfo.error) return respond(cellInfo);
       const { members } = getMembers(cellInfo.cellId);
@@ -100,8 +97,8 @@ function doPost(e) {
       return respond(deactivateMember(cellId, name));
     }
 
-    if (action === 'submitForm') {
-      return respond(submitForm(data));
+    if (action === 'submit') {
+      return respond(submitRecord(email, data));
     }
 
     return respond({ error: '알 수 없는 요청입니다.' });
@@ -168,7 +165,6 @@ function getMembers(cellId) {
 
   const members = [];
   for (let i = 1; i < rows.length; i++) {
-    // active = TRUE인 멤버만 반환
     if (rows[i][0] === cellId && rows[i][2] === true) {
       members.push(rows[i][1]);
     }
@@ -198,27 +194,67 @@ function deactivateMember(cellId, name) {
   return { error: '멤버를 찾을 수 없습니다.' };
 }
 
-function submitForm(data) {
-  const payload = {
-    'entry.1173823960': data.attendees || '',
-    'entry.1331869363': data.absences  || '',
-    'entry.924151839':  data.sharing   || '',
-    'entry.25622691':   data.prayers   || '',
-  };
+/**
+ * 시트에 직접 저장 — 구글 폼 대체
+ *
+ * data 구조:
+ * {
+ *   cellId:     "cell_01",
+ *   attendees:  ["홍길동", "김철수"],
+ *   absences:   [{ name: "이영희", reason: "회사" }],
+ *   sharing:    [{ name: "홍길동", content: "..." }],
+ *   prayers:    [{ name: "홍길동", content: "..." }],
+ *   notes:      "특이사항"
+ * }
+ */
+function submitRecord(email, data) {
+  const cellId = sanitizeCellId(data.cellId);
+  if (!cellId) return { error: '유효하지 않은 셀 ID입니다.' };
 
-  const res = UrlFetchApp.fetch(FORM_RESPONSE_URL, {
-    method:              'post',
-    payload:             payload,
-    muteHttpExceptions:  true,
-    followRedirects:     true,
+  // [SECURE] 본인 셀만 제출 가능 — 다른 셀 데이터 변조 방지
+  const cellInfo = getCell(email);
+  if (cellInfo.error) return cellInfo;
+  if (cellInfo.cellId !== cellId) return { error: '본인 셀만 제출할 수 있습니다.' };
+
+  const ss   = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const now  = new Date();
+  const date = Utilities.formatDate(now, 'Asia/Seoul', 'yyyy-MM-dd');
+  const attendees = data.attendees || [];
+  const absences  = data.absences  || [];
+  const sharing   = data.sharing   || [];
+  const prayers   = data.prayers   || [];
+
+  // ── [시트: 제출기록] 요약 1행 저장 ──
+  const subSheet = ss.getSheetByName(SHEET_SUBMISSIONS);
+  const attendeeNames = attendees.join(', ');
+  const absenceText   = absences.map(function(a) { return a.name + '- ' + a.reason; }).join('\n');
+  const sharingText   = sharing.map(function(s) { return s.name + '- ' + s.content; }).join('\n');
+  const prayerText    = prayers.map(function(p) { return p.name + '- ' + p.content; }).join('\n');
+
+  subSheet.appendRow([
+    date,
+    cellId,
+    cellInfo.cellName,
+    email,
+    attendeeNames,
+    absenceText,
+    sharingText,
+    prayerText,
+    data.notes || ''
+  ]);
+
+  // ── [시트: 출결] 멤버별 개별 기록 저장 (대시보드용) ──
+  const attSheet = ss.getSheetByName(SHEET_ATTENDANCE);
+
+  attendees.forEach(function(name) {
+    attSheet.appendRow([date, cellId, name, '출석', '']);
   });
 
-  const code = res.getResponseCode();
-  // 200 또는 302(리다이렉트) 모두 성공으로 처리
-  if (code === 200 || code === 302) {
-    return { success: true };
-  }
-  return { error: '폼 제출에 실패했습니다. (code: ' + code + ')' };
+  absences.forEach(function(a) {
+    attSheet.appendRow([date, cellId, a.name, '결석', a.reason]);
+  });
+
+  return { success: true, date: date };
 }
 
 // ─── 유틸리티 ───────────────────────────────────────────────────────────────
@@ -265,7 +301,6 @@ function initSheets() {
   if (!leaderSheet) {
     leaderSheet = ss.insertSheet(SHEET_LEADER);
     leaderSheet.appendRow(['cell_id', 'cell_name', 'leader_email']);
-    // 샘플 데이터
     leaderSheet.appendRow(['cell_01', '기쁨셀', 'leader1@gmail.com']);
     leaderSheet.appendRow(['cell_02', '소망셀', 'leader2@gmail.com']);
   }
@@ -275,11 +310,27 @@ function initSheets() {
   if (!memberSheet) {
     memberSheet = ss.insertSheet(SHEET_MEMBERS);
     memberSheet.appendRow(['cell_id', 'name', 'active']);
-    // 샘플 데이터
     memberSheet.appendRow(['cell_01', '홍길동', true]);
     memberSheet.appendRow(['cell_01', '김철수', true]);
     memberSheet.appendRow(['cell_01', '이영희', true]);
     memberSheet.appendRow(['cell_01', '박지민', true]);
+  }
+
+  // 제출기록 시트
+  let subSheet = ss.getSheetByName(SHEET_SUBMISSIONS);
+  if (!subSheet) {
+    subSheet = ss.insertSheet(SHEET_SUBMISSIONS);
+    subSheet.appendRow([
+      'date', 'cell_id', 'cell_name', 'leader_email',
+      'attendees', 'absences', 'sharing', 'prayers', 'notes'
+    ]);
+  }
+
+  // 출결 시트 (멤버별 개별 기록 — 대시보드용)
+  let attSheet = ss.getSheetByName(SHEET_ATTENDANCE);
+  if (!attSheet) {
+    attSheet = ss.insertSheet(SHEET_ATTENDANCE);
+    attSheet.appendRow(['date', 'cell_id', 'member_name', 'status', 'absence_reason']);
   }
 
   Logger.log('시트 초기화 완료');

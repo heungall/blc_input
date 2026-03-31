@@ -30,12 +30,13 @@ export async function deactivateMember(idToken, cellId, name) {
 }
 
 /**
- * 구글 폼 자동 제출
+ * 시트에 직접 저장
  * @param {string} idToken
- * @param {{ attendees, absences, sharing, prayers }} formData
+ * @param {string} cellId
+ * @param {{ attendees: string[], absences: {name,reason}[], sharing: {name,content}[], prayers: {name,content}[], notes?: string }} record
  */
-export async function submitForm(idToken, formData) {
-  return postAction({ action: 'submitForm', idToken, ...formData });
+export async function submitRecord(idToken, cellId, record) {
+  return postAction({ action: 'submit', idToken, cellId, ...record });
 }
 
 // ─── 내부 헬퍼 ──────────────────────────────────────────────────────────────
