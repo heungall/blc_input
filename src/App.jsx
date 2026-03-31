@@ -12,6 +12,7 @@ import Dashboard from './components/Dashboard';
 import LandingPage from './components/LandingPage';
 import NewMemberForm from './components/NewMemberForm';
 import Help from './components/Help';
+import History from './components/History';
 import { submitRecord, fetchDashboard } from './services/api';
 
 const STEPS = ['출결 체크', '역할 추첨', '나눔 기록', '제출'];
@@ -35,6 +36,7 @@ function AppContent({ onBackToLanding }) {
   const [initialized, setInitialized] = useState(false);
   const [showDashboard, setShowDashboard] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [dashboardData, setDashboardData] = useState(null);
 
   // 최신 제출 데이터 보관 (요약 화면 + 수정 시 기존 데이터 유지)
@@ -198,11 +200,14 @@ function AppContent({ onBackToLanding }) {
               &#9776;
             </button>
           )}
-          <button className="header-icon-btn" onClick={() => { setShowMemberManage(true); setShowDashboard(false); setShowHelp(false); }} title="멤버 관리">
+          <button className="header-icon-btn" onClick={() => { setShowHistory(true); setShowMemberManage(false); setShowDashboard(false); setShowHelp(false); }} title="제출 히스토리">
+            &#128203;
+          </button>
+          <button className="header-icon-btn" onClick={() => { setShowMemberManage(true); setShowDashboard(false); setShowHelp(false); setShowHistory(false); }} title="멤버 관리">
             &#9881;
           </button>
           <img src={user.picture} alt={user.name} className="user-avatar" />
-          <button className="header-icon-btn" onClick={() => { setShowHelp(true); setShowDashboard(false); setShowMemberManage(false); }} title="도움말">
+          <button className="header-icon-btn" onClick={() => { setShowHelp(true); setShowDashboard(false); setShowMemberManage(false); setShowHistory(false); }} title="도움말">
             ?
           </button>
           <button className="logout-btn" onClick={() => { logout(); onBackToLanding(); }} title="로그아웃">
@@ -211,7 +216,7 @@ function AppContent({ onBackToLanding }) {
         </div>
       </header>
 
-      {!showMemberManage && !showDashboard && step >= 0 && (
+      {!showMemberManage && !showDashboard && !showHistory && step >= 0 && (
         <div className="steps-indicator">
           {STEPS.map((label, i) => (
             <div
@@ -228,14 +233,18 @@ function AppContent({ onBackToLanding }) {
           <Help onClose={() => setShowHelp(false)} userRole={user.role} />
         )}
 
-        {!showHelp && showDashboard && (
+        {!showHelp && showHistory && (
+          <History onClose={() => setShowHistory(false)} />
+        )}
+
+        {!showHelp && !showHistory && showDashboard && (
           <Dashboard
             data={dashboardData}
             onBack={() => setShowDashboard(false)}
           />
         )}
 
-        {!showHelp && !showDashboard && showMemberManage && (
+        {!showHelp && !showHistory && !showDashboard && showMemberManage && (
           <MemberManage
             members={memberList}
             setMembers={setMemberList}
@@ -243,7 +252,7 @@ function AppContent({ onBackToLanding }) {
           />
         )}
 
-        {!showHelp && !showDashboard && !showMemberManage && step === -1 && (
+        {!showHelp && !showHistory && !showDashboard && !showMemberManage && step === -1 && (
           <WeeklySummary
             weeklyData={latestWeekly.current || user.weeklyData}
             onEditAttendance={() => setStep(0)}
@@ -252,7 +261,7 @@ function AppContent({ onBackToLanding }) {
           />
         )}
 
-        {!showHelp && !showDashboard && !showMemberManage && step === 0 && (
+        {!showHelp && !showHistory && !showDashboard && !showMemberManage && step === 0 && (
           <Attendance
             attendance={attendance}
             setAttendance={setAttendance}
@@ -264,7 +273,7 @@ function AppContent({ onBackToLanding }) {
           />
         )}
 
-        {!showHelp && !showDashboard && !showMemberManage && step === 1 && (
+        {!showHelp && !showHistory && !showDashboard && !showMemberManage && step === 1 && (
           <Lottery
             names={attendees}
             initialResults={lotteryResults}
@@ -273,7 +282,7 @@ function AppContent({ onBackToLanding }) {
           />
         )}
 
-        {!showHelp && !showDashboard && !showMemberManage && step === 2 && (
+        {!showHelp && !showHistory && !showDashboard && !showMemberManage && step === 2 && (
           <SharingPrayers
             attendees={attendees}
             onNext={handleSharingNext}
@@ -282,7 +291,7 @@ function AppContent({ onBackToLanding }) {
           />
         )}
 
-        {!showHelp && !showDashboard && !showMemberManage && step === 3 && (
+        {!showHelp && !showHistory && !showDashboard && !showMemberManage && step === 3 && (
           <Submit
             attendees={attendees}
             absences={absences}

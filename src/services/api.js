@@ -78,6 +78,16 @@ export async function updateSettings(idToken, key, value) {
   return postAction({ action: 'updateSettings', idToken, key, value });
 }
 
+/**
+ * 제출 히스토리 조회 (본인 셀만)
+ * @param {string} idToken
+ * @param {number} limit — 가져올 건수 (기본 10)
+ * @returns {{ history: Array } | { error }}
+ */
+export async function fetchHistory(idToken, limit = 10) {
+  return postAction({ action: 'getHistory', idToken, limit });
+}
+
 // ─── 내부 헬퍼 ──────────────────────────────────────────────────────────────
 
 async function postAction(body) {

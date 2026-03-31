@@ -154,6 +154,15 @@ function doPost(e) {
       return respond(getDashboardData(email));
     }
 
+    if (action === 'getHistory') {
+      // [SECURE] 본인 셀의 제출 히스토리만 조회 가능
+      var callerForHistory = getCell(email);
+      if (callerForHistory.error) return respond({ error: '권한이 없습니다.' });
+      var limit = parseInt(data.limit) || 10;
+      if (limit > 52) limit = 52; // 최대 1년치
+      return respond(getHistory(callerForHistory.cellId, limit));
+    }
+
     return respond({ error: '알 수 없는 요청입니다.' });
   } catch (err) {
     // [SECURE] 내부 오류 노출 금지
@@ -418,6 +427,50 @@ function submitRecord(email, data) {
 
   var isUpdate = existingRow > 0;
   return { success: true, date: date, updated: isUpdate };
+}
+
+// ─── 히스토리 ──────────────────────────────────────────────────────────────
+
+/**
+ * 셀 리더의 제출 히스토리 조회 (최근 N개)
+ * @param {string} cellId
+ * @param {number} limit — 최대 반환 건수 (기본 10, 최대 52)
+ * @returns {{ history: Array }}
+ */
+function getHistory(cellId, limit) {
+  var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = ss.getSheetByName(SHEET_SUBMISSIONS);
+  var rows  = sheet.getDataRange().getValues();
+
+  var result = [];
+  // 역순으로 탐색 — 최신 기록부터
+  for (var i = rows.length - 1; i >= 1; i--) {
+    if (rows[i][1] !== cellId) continue;
+
+    var dateVal = rows[i][0];
+    var dateStr = dateVal instanceof Date
+      ? Utilities.formatDate(dateVal, 'Asia/Seoul', 'yyyy-MM-dd')
+      : String(dateVal);
+
+    // raw_data가 있으면 파싱해서 원본 배열 반환, 없으면 텍스트에서 구성
+    var raw = null;
+    if (rows[i][9]) {
+      try { raw = JSON.parse(rows[i][9]); } catch (e) {}
+    }
+
+    result.push({
+      date:      dateStr,
+      attendees: raw ? raw.attendees : (rows[i][4] ? rows[i][4].split(', ') : []),
+      absences:  raw ? raw.absences  : [],
+      sharing:   raw ? raw.sharing   : [],
+      prayers:   raw ? raw.prayers   : [],
+      notes:     raw ? (raw.notes || '') : (rows[i][8] || ''),
+    });
+
+    if (result.length >= limit) break;
+  }
+
+  return { history: result };
 }
 
 // ─── 대시보드 (admin 전용) ──────────────────────────────────────────────────
