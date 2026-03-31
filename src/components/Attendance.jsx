@@ -1,15 +1,6 @@
-import { useState, useRef } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { addMember, deactivateMember } from '../services/api';
-
 const ABSENCE_REASONS = ['회사', '개인사정', '여행'];
 
 export default function Attendance({ attendance, setAttendance, onNext, onSkipLottery, isEditing, onBackToSummary }) {
-  const { user } = useAuth();
-  const [newName, setNewName] = useState('');
-  const [adding, setAdding] = useState(false);
-  const inputRef = useRef(null);
-
   const members = Object.keys(attendance);
   const attendees = members.filter(n => attendance[n].present);
   const absentees = members.filter(n => !attendance[n].present);
@@ -32,57 +23,12 @@ export default function Attendance({ attendance, setAttendance, onNext, onSkipLo
     }));
   };
 
-  const handleAddMember = async () => {
-    const trimmed = newName.trim();
-    if (!trimmed || members.includes(trimmed)) return;
-
-    setAdding(true);
-    try {
-      await addMember(user.idToken, user.cellId, trimmed);
-      setAttendance(prev => ({
-        ...prev,
-        [trimmed]: { present: true, reason: '' }
-      }));
-      setNewName('');
-      inputRef.current?.focus();
-    } catch (err) {
-      // [SECURE] 내부 오류 노출 금지
-      console.error('addMember error:', err);
-      alert('멤버 추가에 실패했습니다.');
-    } finally {
-      setAdding(false);
-    }
-  };
-
-  const handleDeactivate = async (name) => {
-    if (!confirm(`${name}님을 비활성화하시겠습니까?`)) return;
-
-    try {
-      await deactivateMember(user.idToken, user.cellId, name);
-      setAttendance(prev => {
-        const next = { ...prev };
-        delete next[name];
-        return next;
-      });
-    } catch (err) {
-      console.error('deactivateMember error:', err);
-      alert('멤버 비활성화에 실패했습니다.');
-    }
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleAddMember();
-    }
-  };
-
   return (
     <div>
       <div className="card">
         <h2>출결 체크</h2>
         <p className="card-desc">
-          멤버를 탭하여 출석/결석을 전환하세요.
+          멤버를 탭하여 출석/결석을 전환하세요. 멤버 추가/삭제는 상단 설정에서 할 수 있습니다.
         </p>
 
         <div className="attendance-list">
@@ -140,24 +86,6 @@ export default function Attendance({ attendance, setAttendance, onNext, onSkipLo
 
         <div className="attendance-summary">
           출석 {attendees.length}명 / 결석 {absentees.length}명
-        </div>
-      </div>
-
-      <div className="card">
-        <h2>멤버 추가</h2>
-        <div className="name-input-row">
-          <input
-            ref={inputRef}
-            type="text"
-            placeholder="새 멤버 이름"
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={adding}
-          />
-          <button onClick={handleAddMember} disabled={adding || !newName.trim()}>
-            {adding ? '...' : '추가'}
-          </button>
         </div>
       </div>
 

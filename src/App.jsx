@@ -7,6 +7,7 @@ import Attendance from './components/Attendance';
 import Lottery from './components/Lottery';
 import SharingPrayers from './components/SharingPrayers';
 import Submit from './components/Submit';
+import MemberManage from './components/MemberManage';
 
 const STEPS = ['출결 체크', '역할 추첨', '나눔 기록', '제출'];
 
@@ -18,6 +19,8 @@ function AppContent() {
   // { [name]: { present: boolean, reason: string } }
   const [attendance, setAttendance] = useState({});
   const [lotteryResults, setLotteryResults] = useState(null);
+  const [showMemberManage, setShowMemberManage] = useState(false);
+  const [memberList, setMemberList] = useState([]);
   const [sharingData, setSharingData] = useState({ sharing: [], prayers: [] });
   const [isEditing, setIsEditing] = useState(false);
   const [initialized, setInitialized] = useState(false);
@@ -68,8 +71,21 @@ function AppContent() {
     }
 
     setAttendance(init);
+    setMemberList(user.members);
     setInitialized(true);
   }, [user, initialized]);
+
+  // 멤버 관리에서 변경 시 출결 목록도 동기화
+  useEffect(() => {
+    if (!initialized || memberList.length === 0) return;
+    setAttendance(prev => {
+      const next = {};
+      memberList.forEach(name => {
+        next[name] = prev[name] || { present: true, reason: '' };
+      });
+      return next;
+    });
+  }, [memberList, initialized]);
 
   const attendees = Object.keys(attendance).filter(n => attendance[n].present);
   const absences = Object.keys(attendance)
@@ -118,6 +134,9 @@ function AppContent() {
           <p>{user.cellName}</p>
         </div>
         <div className="header-user">
+          <button className="header-icon-btn" onClick={() => setShowMemberManage(true)} title="멤버 관리">
+            &#9881;
+          </button>
           <img src={user.picture} alt={user.name} className="user-avatar" />
           <button className="logout-btn" onClick={logout} title="로그아웃">
             &#10005;
@@ -138,7 +157,15 @@ function AppContent() {
       )}
 
       <div className="content">
-        {step === -1 && (
+        {showMemberManage && (
+          <MemberManage
+            members={memberList}
+            setMembers={setMemberList}
+            onClose={() => setShowMemberManage(false)}
+          />
+        )}
+
+        {!showMemberManage && step === -1 && (
           <WeeklySummary
             weeklyData={user.weeklyData}
             onEditAttendance={() => setStep(0)}
@@ -147,7 +174,7 @@ function AppContent() {
           />
         )}
 
-        {step === 0 && (
+        {!showMemberManage && step === 0 && (
           <Attendance
             attendance={attendance}
             setAttendance={setAttendance}
@@ -158,7 +185,7 @@ function AppContent() {
           />
         )}
 
-        {step === 1 && (
+        {!showMemberManage && step === 1 && (
           <Lottery
             names={attendees}
             initialResults={lotteryResults}
@@ -167,7 +194,7 @@ function AppContent() {
           />
         )}
 
-        {step === 2 && (
+        {!showMemberManage && step === 2 && (
           <SharingPrayers
             attendees={attendees}
             onNext={handleSharingNext}
@@ -176,7 +203,7 @@ function AppContent() {
           />
         )}
 
-        {step === 3 && (
+        {!showMemberManage && step === 3 && (
           <Submit
             attendees={attendees}
             absences={absences}
