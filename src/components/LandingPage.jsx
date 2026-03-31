@@ -3,7 +3,7 @@ export default function LandingPage({ onSelect }) {
     <div className="landing-container">
       <div className="landing-card">
         <div className="landing-icon">&#9968;</div>
-        <h1 className="landing-title">오늘의 섬김</h1>
+        <h1 className="landing-title">BLC 홍대교회</h1>
         <p className="landing-subtitle">홍대청년교회</p>
 
         <div className="landing-options">

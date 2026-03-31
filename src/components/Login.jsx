@@ -57,7 +57,7 @@ export default function Login() {
     <div className="login-container">
       <div className="login-card">
         <div className="login-icon">🙏</div>
-        <h1 className="login-title">오늘의 섬김</h1>
+        <h1 className="login-title">BLC 홍대교회</h1>
         <p className="login-subtitle">셀 리더 일지 앱</p>
 
         <div className="login-google-btn">

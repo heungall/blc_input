@@ -190,7 +190,7 @@ function AppContent({ onBackToLanding }) {
     <div className="app">
       <header className="header">
         <div className="header-main">
-          <h1>오늘의 섬김</h1>
+          <h1>BLC 홍대교회</h1>
           <p>{user.cellName}</p>
         </div>
         <div className="header-user">
