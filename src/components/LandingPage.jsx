@@ -2,20 +2,24 @@ import { useState, useEffect } from 'react';
 import { getSettings } from '../services/api';
 
 export default function LandingPage({ onSelect }) {
-  const [motto, setMotto] = useState('');
-  const [year, setYear] = useState('');
+  const cached = (() => {
+    try { return JSON.parse(localStorage.getItem('blc_settings') || '{}'); }
+    catch { return {}; }
+  })();
+  const [motto, setMotto] = useState(cached.motto || '');
+  const [year, setYear] = useState(cached.year || '');
 
   useEffect(() => {
     getSettings().then(s => {
       if (s.motto) setMotto(s.motto);
       if (s.year) setYear(s.year);
+      localStorage.setItem('blc_settings', JSON.stringify(s));
     }).catch(() => {});
   }, []);
 
   return (
     <div className="landing-container">
       <div className="landing-card">
-        <div className="landing-icon">&#9968;</div>
         <h1 className="landing-title">BLC 홍대교회</h1>
 
         {motto && (
