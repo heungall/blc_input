@@ -4,7 +4,7 @@ const HELP_SECTIONS = [
   {
     id: 'leader',
     title: '셀 리더 가이드',
-    icon: '&#128221;',
+    icon: '📝',
     items: [
       {
         q: '출결 체크는 어떻게 하나요?',
@@ -31,7 +31,7 @@ const HELP_SECTIONS = [
   {
     id: 'newcomer',
     title: '새신자 / 방문자',
-    icon: '&#128075;',
+    icon: '👋',
     items: [
       {
         q: '방문자 카드는 어떻게 작성하나요?',
@@ -46,7 +46,7 @@ const HELP_SECTIONS = [
   {
     id: 'admin',
     title: '관리자 가이드',
-    icon: '&#128202;',
+    icon: '📊',
     items: [
       {
         q: '대시보드는 어디서 보나요?',
