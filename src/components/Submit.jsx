@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { submitRecord } from '../services/api';
 
-export default function Submit({ attendees, absences, sharing, prayers, onBack, onRestart }) {
+export default function Submit({ attendees, absences, sharing, prayers, notes: initialNotes, isEditing, onBack, onRestart }) {
   const { user } = useAuth();
-  const [notes, setNotes] = useState('');
+  const [notes, setNotes] = useState(initialNotes || '');
   const [submitting, setSubmitting] = useState(false);
-  const [result, setResult] = useState(null); // { success, date } | { error }
+  const [result, setResult] = useState(null); // { success, date, updated } | { error }
 
   const handleSubmit = async () => {
     setSubmitting(true);
@@ -22,7 +22,7 @@ export default function Submit({ attendees, absences, sharing, prayers, onBack, 
       if (res.error) {
         setResult({ error: res.error });
       } else {
-        setResult({ success: true, date: res.date });
+        setResult({ success: true, date: res.date, updated: res.updated });
         localStorage.removeItem('blc_sharing_prayers');
       }
     } catch (err) {
@@ -39,9 +39,9 @@ export default function Submit({ attendees, absences, sharing, prayers, onBack, 
       <div>
         <div className="card submit-success">
           <div className="success-icon">&#10003;</div>
-          <h2>제출 완료!</h2>
+          <h2>{result.updated ? '수정 완료!' : '제출 완료!'}</h2>
           <p className="card-desc">
-            {result.date} 셀 리더 일지가 저장되었습니다.
+            {result.date} 셀 리더 일지가 {result.updated ? '수정' : '저장'}되었습니다.
           </p>
         </div>
         <div className="btn-group">
@@ -67,7 +67,7 @@ export default function Submit({ attendees, absences, sharing, prayers, onBack, 
   return (
     <div>
       <div className="card">
-        <h2>제출 미리보기</h2>
+        <h2>{isEditing ? '수정 미리보기' : '제출 미리보기'}</h2>
 
         <div className="form-preview">
           <div className="label">출석 멤버</div>
@@ -117,7 +117,7 @@ export default function Submit({ attendees, absences, sharing, prayers, onBack, 
           onClick={handleSubmit}
           disabled={submitting}
         >
-          {submitting ? '제출 중...' : '제출하기'}
+          {submitting ? '저장 중...' : isEditing ? '수정하기' : '제출하기'}
         </button>
         <button className="btn btn-outline" onClick={onBack} disabled={submitting}>
           이전으로

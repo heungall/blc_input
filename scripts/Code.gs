@@ -26,8 +26,6 @@ const SHEET_ATTENDANCE  = '출결';
 
 /**
  * GET — 읽기 전용 (인증 없음, 이메일만 파라미터)
- * action=getCell&email=...
- * action=getMembers&cellId=...
  */
 function doGet(e) {
   try {
@@ -79,7 +77,9 @@ function doPost(e) {
       const cellInfo = getCell(email);
       if (cellInfo.error) return respond(cellInfo);
       const { members } = getMembers(cellInfo.cellId);
-      return respond({ ...cellInfo, members });
+      // 로그인 시 이번 주 기존 제출 데이터도 함께 반환
+      const weekly = getWeeklySubmission(cellInfo.cellId);
+      return respond({ ...cellInfo, members, weeklyData: weekly });
     }
 
     if (action === 'addMember') {
@@ -111,10 +111,6 @@ function doPost(e) {
 
 // ─── 인증 ──────────────────────────────────────────────────────────────────
 
-/**
- * Google ID 토큰 검증
- * @returns {Object|null} 검증된 토큰 정보 또는 null
- */
 function verifyIdToken(idToken) {
   if (!idToken || typeof idToken !== 'string') return null;
   try {
@@ -139,14 +135,37 @@ function verifyIdToken(idToken) {
   }
 }
 
+// ─── 주간 날짜 유틸 ─────────────────────────────────────────────────────────
+
+/**
+ * 해당 날짜가 속한 주의 월요일 날짜를 반환 (KST 기준)
+ */
+function getWeekMonday(date) {
+  var d = new Date(date.getTime());
+  var day = d.getDay(); // 0=일, 1=월, ..., 6=토
+  var diff = day === 0 ? -6 : 1 - day; // 일요일이면 전주 월요일
+  d.setDate(d.getDate() + diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+/**
+ * 두 날짜가 같은 주(월~일)에 속하는지 확인
+ */
+function isSameWeek(date1, date2) {
+  var m1 = getWeekMonday(date1);
+  var m2 = getWeekMonday(date2);
+  return m1.getTime() === m2.getTime();
+}
+
 // ─── 비즈니스 로직 ──────────────────────────────────────────────────────────
 
 function getCell(email) {
-  const ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const sheet = ss.getSheetByName(SHEET_LEADER);
-  const rows  = sheet.getDataRange().getValues();
+  var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = ss.getSheetByName(SHEET_LEADER);
+  var rows  = sheet.getDataRange().getValues();
 
-  for (let i = 1; i < rows.length; i++) {
+  for (var i = 1; i < rows.length; i++) {
     if (rows[i][2].toString().toLowerCase().trim() === email) {
       return {
         cellId:      rows[i][0],
@@ -159,32 +178,32 @@ function getCell(email) {
 }
 
 function getMembers(cellId) {
-  const ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const sheet = ss.getSheetByName(SHEET_MEMBERS);
-  const rows  = sheet.getDataRange().getValues();
+  var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = ss.getSheetByName(SHEET_MEMBERS);
+  var rows  = sheet.getDataRange().getValues();
 
-  const members = [];
-  for (let i = 1; i < rows.length; i++) {
+  var members = [];
+  for (var i = 1; i < rows.length; i++) {
     if (rows[i][0] === cellId && rows[i][2] === true) {
       members.push(rows[i][1]);
     }
   }
-  return { members };
+  return { members: members };
 }
 
 function addMember(cellId, name) {
-  const ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const sheet = ss.getSheetByName(SHEET_MEMBERS);
+  var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = ss.getSheetByName(SHEET_MEMBERS);
   sheet.appendRow([cellId, name, true]);
   return { success: true };
 }
 
 function deactivateMember(cellId, name) {
-  const ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const sheet = ss.getSheetByName(SHEET_MEMBERS);
-  const rows  = sheet.getDataRange().getValues();
+  var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = ss.getSheetByName(SHEET_MEMBERS);
+  var rows  = sheet.getDataRange().getValues();
 
-  for (let i = 1; i < rows.length; i++) {
+  for (var i = 1; i < rows.length; i++) {
     if (rows[i][0] === cellId && rows[i][1] === name) {
       // [SECURE] 삭제 대신 비활성화 처리 — 기록 보존
       sheet.getRange(i + 1, 3).setValue(false);
@@ -195,7 +214,41 @@ function deactivateMember(cellId, name) {
 }
 
 /**
- * 시트에 직접 저장 — 구글 폼 대체
+ * 이번 주(월~일) 해당 셀의 제출 기록 조회
+ * @returns {Object|null} raw_data JSON 또는 null
+ */
+function getWeeklySubmission(cellId) {
+  var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = ss.getSheetByName(SHEET_SUBMISSIONS);
+  var rows  = sheet.getDataRange().getValues();
+  var now   = new Date();
+
+  // 최신 행부터 역순 탐색 (최근 제출을 빠르게 찾기 위해)
+  for (var i = rows.length - 1; i >= 1; i--) {
+    if (rows[i][1] !== cellId) continue;
+
+    var rowDate = new Date(rows[i][0]);
+    if (isSameWeek(rowDate, now)) {
+      // raw_data 컬럼 (10번째, index 9)
+      var rawStr = rows[i][9];
+      if (rawStr) {
+        try {
+          return JSON.parse(rawStr);
+        } catch (e) {
+          Logger.log('raw_data parse error row ' + (i + 1) + ': ' + e.message);
+        }
+      }
+      return null;
+    }
+
+    // 이번 주보다 이전 데이터면 더 볼 필요 없음
+    if (rowDate < getWeekMonday(now)) break;
+  }
+  return null;
+}
+
+/**
+ * 시트에 직접 저장 — 이번 주 기존 기록이 있으면 업데이트
  *
  * data 구조:
  * {
@@ -208,44 +261,81 @@ function deactivateMember(cellId, name) {
  * }
  */
 function submitRecord(email, data) {
-  const cellId = sanitizeCellId(data.cellId);
+  var cellId = sanitizeCellId(data.cellId);
   if (!cellId) return { error: '유효하지 않은 셀 ID입니다.' };
 
   // [SECURE] 본인 셀만 제출 가능 — 다른 셀 데이터 변조 방지
-  const cellInfo = getCell(email);
+  var cellInfo = getCell(email);
   if (cellInfo.error) return cellInfo;
   if (cellInfo.cellId !== cellId) return { error: '본인 셀만 제출할 수 있습니다.' };
 
-  const ss   = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const now  = new Date();
-  const date = Utilities.formatDate(now, 'Asia/Seoul', 'yyyy-MM-dd');
-  const attendees = data.attendees || [];
-  const absences  = data.absences  || [];
-  const sharing   = data.sharing   || [];
-  const prayers   = data.prayers   || [];
+  var ss   = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var now  = new Date();
+  var date = Utilities.formatDate(now, 'Asia/Seoul', 'yyyy-MM-dd');
+  var attendees = data.attendees || [];
+  var absences  = data.absences  || [];
+  var sharing   = data.sharing   || [];
+  var prayers   = data.prayers   || [];
 
-  // ── [시트: 제출기록] 요약 1행 저장 ──
-  const subSheet = ss.getSheetByName(SHEET_SUBMISSIONS);
-  const attendeeNames = attendees.join(', ');
-  const absenceText   = absences.map(function(a) { return a.name + '- ' + a.reason; }).join('\n');
-  const sharingText   = sharing.map(function(s) { return s.name + '- ' + s.content; }).join('\n');
-  const prayerText    = prayers.map(function(p) { return p.name + '- ' + p.content; }).join('\n');
+  var attendeeNames = attendees.join(', ');
+  var absenceText   = absences.map(function(a) { return a.name + ' - ' + a.reason; }).join('\n');
+  var sharingText   = sharing.map(function(s) { return s.name + ' - ' + s.content; }).join('\n');
+  var prayerText    = prayers.map(function(p) { return p.name + ' - ' + p.content; }).join('\n');
 
-  subSheet.appendRow([
-    date,
-    cellId,
-    cellInfo.cellName,
-    email,
-    attendeeNames,
-    absenceText,
-    sharingText,
-    prayerText,
-    data.notes || ''
-  ]);
+  // raw_data: 프론트에서 복원 가능한 원본 JSON
+  var rawData = JSON.stringify({
+    attendees: attendees,
+    absences:  absences,
+    sharing:   sharing,
+    prayers:   prayers,
+    notes:     data.notes || ''
+  });
 
-  // ── [시트: 출결] 멤버별 개별 기록 저장 (대시보드용) ──
-  const attSheet = ss.getSheetByName(SHEET_ATTENDANCE);
+  var rowValues = [
+    date, cellId, cellInfo.cellName, email,
+    attendeeNames, absenceText, sharingText, prayerText,
+    data.notes || '', rawData
+  ];
 
+  // ── [시트: 제출기록] — 이번 주 기존 행 찾아서 업데이트 or 새 행 추가 ──
+  var subSheet = ss.getSheetByName(SHEET_SUBMISSIONS);
+  var subRows  = subSheet.getDataRange().getValues();
+  var existingRow = -1;
+
+  for (var i = subRows.length - 1; i >= 1; i--) {
+    if (subRows[i][1] !== cellId) continue;
+    var rowDate = new Date(subRows[i][0]);
+    if (isSameWeek(rowDate, now)) {
+      existingRow = i + 1; // 시트 행 번호 (1-based)
+      break;
+    }
+    if (rowDate < getWeekMonday(now)) break;
+  }
+
+  if (existingRow > 0) {
+    // 기존 행 업데이트
+    subSheet.getRange(existingRow, 1, 1, rowValues.length).setValues([rowValues]);
+  } else {
+    // 새 행 추가
+    subSheet.appendRow(rowValues);
+  }
+
+  // ── [시트: 출결] — 이번 주 기존 기록 삭제 후 새로 삽입 ──
+  var attSheet = ss.getSheetByName(SHEET_ATTENDANCE);
+  var attRows  = attSheet.getDataRange().getValues();
+
+  // 역순으로 이번 주 해당 셀 출결 행 삭제
+  for (var j = attRows.length - 1; j >= 1; j--) {
+    if (attRows[j][1] !== cellId) continue;
+    var attDate = new Date(attRows[j][0]);
+    if (isSameWeek(attDate, now)) {
+      attSheet.deleteRow(j + 1);
+    } else if (attDate < getWeekMonday(now)) {
+      break;
+    }
+  }
+
+  // 새 출결 기록 삽입
   attendees.forEach(function(name) {
     attSheet.appendRow([date, cellId, name, '출석', '']);
   });
@@ -254,13 +344,14 @@ function submitRecord(email, data) {
     attSheet.appendRow([date, cellId, a.name, '결석', a.reason]);
   });
 
-  return { success: true, date: date };
+  var isUpdate = existingRow > 0;
+  return { success: true, date: date, updated: isUpdate };
 }
 
 // ─── 유틸리티 ───────────────────────────────────────────────────────────────
 
 function respond(data) {
-  const output = ContentService.createTextOutput(JSON.stringify(data));
+  var output = ContentService.createTextOutput(JSON.stringify(data));
   output.setMimeType(ContentService.MimeType.JSON);
   return output;
 }
@@ -269,7 +360,7 @@ function respond(data) {
 
 function sanitizeEmail(val) {
   if (!val || typeof val !== 'string') return null;
-  const email = val.toLowerCase().trim();
+  var email = val.toLowerCase().trim();
   // [SECURE] 간단한 이메일 형식 검증
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : null;
 }
@@ -282,22 +373,18 @@ function sanitizeCellId(val) {
 
 function sanitizeName(val) {
   if (!val || typeof val !== 'string') return null;
-  const name = val.trim();
+  var name = val.trim();
   // [SECURE] 최대 20자, 특수문자 제한
   return name.length > 0 && name.length <= 20 ? name : null;
 }
 
 // ─── 초기 시트 설정 (최초 1회 실행) ─────────────────────────────────────────
 
-/**
- * Apps Script 에디터에서 직접 실행:
- *   실행 → 함수 선택 → initSheets
- */
 function initSheets() {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
 
   // 셀_리더 시트
-  let leaderSheet = ss.getSheetByName(SHEET_LEADER);
+  var leaderSheet = ss.getSheetByName(SHEET_LEADER);
   if (!leaderSheet) {
     leaderSheet = ss.insertSheet(SHEET_LEADER);
     leaderSheet.appendRow(['cell_id', 'cell_name', 'leader_email']);
@@ -306,7 +393,7 @@ function initSheets() {
   }
 
   // 멤버 시트
-  let memberSheet = ss.getSheetByName(SHEET_MEMBERS);
+  var memberSheet = ss.getSheetByName(SHEET_MEMBERS);
   if (!memberSheet) {
     memberSheet = ss.insertSheet(SHEET_MEMBERS);
     memberSheet.appendRow(['cell_id', 'name', 'active']);
@@ -316,18 +403,18 @@ function initSheets() {
     memberSheet.appendRow(['cell_01', '박지민', true]);
   }
 
-  // 제출기록 시트
-  let subSheet = ss.getSheetByName(SHEET_SUBMISSIONS);
+  // 제출기록 시트 (raw_data 컬럼 추가)
+  var subSheet = ss.getSheetByName(SHEET_SUBMISSIONS);
   if (!subSheet) {
     subSheet = ss.insertSheet(SHEET_SUBMISSIONS);
     subSheet.appendRow([
       'date', 'cell_id', 'cell_name', 'leader_email',
-      'attendees', 'absences', 'sharing', 'prayers', 'notes'
+      'attendees', 'absences', 'sharing', 'prayers', 'notes', 'raw_data'
     ]);
   }
 
-  // 출결 시트 (멤버별 개별 기록 — 대시보드용)
-  let attSheet = ss.getSheetByName(SHEET_ATTENDANCE);
+  // 출결 시트
+  var attSheet = ss.getSheetByName(SHEET_ATTENDANCE);
   if (!attSheet) {
     attSheet = ss.insertSheet(SHEET_ATTENDANCE);
     attSheet.appendRow(['date', 'cell_id', 'member_name', 'status', 'absence_reason']);

@@ -17,16 +17,54 @@ function AppContent() {
   const [attendance, setAttendance] = useState({});
   const [lotteryResults, setLotteryResults] = useState(null);
   const [sharingData, setSharingData] = useState({ sharing: [], prayers: [] });
+  const [isEditing, setIsEditing] = useState(false);
 
-  // 로그인 후 멤버 목록으로 출결 초기화
+  // 로그인 후 멤버 목록 + 이번 주 기존 데이터로 초기화
   useEffect(() => {
-    if (user && user.members.length > 0 && Object.keys(attendance).length === 0) {
-      const init = {};
+    if (!user || user.members.length === 0 || Object.keys(attendance).length > 0) return;
+
+    const weekly = user.weeklyData;
+    const init = {};
+
+    if (weekly) {
+      // 기존 제출 데이터로 복원
+      const attendeeSet = new Set(weekly.attendees || []);
+      const absenceMap = {};
+      (weekly.absences || []).forEach(a => { absenceMap[a.name] = a.reason; });
+
+      // 멤버 목록 기준 + 기존 데이터의 결석자 포함
+      const allNames = new Set([...user.members, ...attendeeSet, ...Object.keys(absenceMap)]);
+      allNames.forEach(name => {
+        if (absenceMap[name] !== undefined) {
+          init[name] = { present: false, reason: absenceMap[name] };
+        } else if (attendeeSet.has(name)) {
+          init[name] = { present: true, reason: '' };
+        } else {
+          init[name] = { present: true, reason: '' };
+        }
+      });
+
+      // 나눔/기도제목도 localStorage에 복원
+      const sharingRestore = {};
+      (weekly.sharing || []).forEach(s => {
+        sharingRestore[s.name] = { ...sharingRestore[s.name], sharing: s.content };
+      });
+      (weekly.prayers || []).forEach(p => {
+        sharingRestore[p.name] = { ...sharingRestore[p.name], prayer: p.content };
+      });
+      if (Object.keys(sharingRestore).length > 0) {
+        localStorage.setItem('blc_sharing_prayers', JSON.stringify(sharingRestore));
+      }
+
+      setIsEditing(true);
+    } else {
+      // 새 제출 — 전원 출석으로 초기화
       user.members.forEach(name => {
         init[name] = { present: true, reason: '' };
       });
-      setAttendance(init);
     }
+
+    setAttendance(init);
   }, [user, attendance]);
 
   const attendees = Object.keys(attendance).filter(n => attendance[n].present);
@@ -87,6 +125,12 @@ function AppContent() {
       </div>
 
       <div className="content">
+        {isEditing && step === 0 && (
+          <div className="edit-banner">
+            이번 주 제출된 기록이 있습니다. 수정 후 다시 제출하세요.
+          </div>
+        )}
+
         {step === 0 && (
           <Attendance
             attendance={attendance}
@@ -119,6 +163,8 @@ function AppContent() {
             absences={absences}
             sharing={sharingData.sharing}
             prayers={sharingData.prayers}
+            notes={user.weeklyData?.notes}
+            isEditing={isEditing}
             onBack={() => setStep(2)}
             onRestart={handleRestart}
           />

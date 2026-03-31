@@ -463,6 +463,18 @@
   background: rgba(255, 255, 255, 0.4);
 }
 
+/* Edit banner */
+.edit-banner {
+  background: #FEF3C7;
+  color: #92400E;
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
 /* Card description */
 .card-desc {
   font-size: 13px;
