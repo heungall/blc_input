@@ -1,6 +1,9 @@
+import { useState } from 'react';
+
 const ABSENCE_REASONS = ['회사', '개인사정', '여행'];
 
-export default function Attendance({ attendance, setAttendance, onNext, onSkipLottery, isEditing, onBackToSummary }) {
+export default function Attendance({ attendance, setAttendance, onNext, onSkipLottery, isEditing, onBackToSummary, onQuickSave }) {
+  const [saving, setSaving] = useState(false);
   const members = Object.keys(attendance);
   const attendees = members.filter(n => attendance[n].present);
   const absentees = members.filter(n => !attendance[n].present);
@@ -104,6 +107,19 @@ export default function Attendance({ attendance, setAttendance, onNext, onSkipLo
         >
           추첨 없이 넘어가기
         </button>
+        {onQuickSave && (
+          <button
+            className="btn btn-success"
+            onClick={async () => {
+              setSaving(true);
+              await onQuickSave();
+              setSaving(false);
+            }}
+            disabled={saving}
+          >
+            {saving ? '저장 중...' : '출결만 저장'}
+          </button>
+        )}
         {onBackToSummary && (
           <button className="btn btn-outline" onClick={onBackToSummary}>
             요약으로 돌아가기

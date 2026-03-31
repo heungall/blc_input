@@ -23,7 +23,6 @@ export default function Submit({ attendees, absences, sharing, prayers, notes: i
         setResult({ error: res.error });
       } else {
         setResult({ success: true, date: res.date, updated: res.updated });
-        localStorage.removeItem('blc_sharing_prayers');
       }
     } catch (err) {
       // [SECURE] 내부 오류 노출 금지
@@ -45,7 +44,10 @@ export default function Submit({ attendees, absences, sharing, prayers, notes: i
           </p>
         </div>
         <div className="btn-group">
-          <button className="btn btn-primary" onClick={onDone || onRestart}>
+          <button className="btn btn-primary" onClick={() => {
+            const submitted = { attendees, absences, sharing, prayers, notes: notes.trim() };
+            (onDone || onRestart)(submitted);
+          }}>
             확인
           </button>
         </div>

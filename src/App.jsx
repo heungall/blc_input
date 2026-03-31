@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import './App.css';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './components/Login';
@@ -8,6 +8,7 @@ import Lottery from './components/Lottery';
 import SharingPrayers from './components/SharingPrayers';
 import Submit from './components/Submit';
 import MemberManage from './components/MemberManage';
+import { submitRecord } from './services/api';
 
 const STEPS = ['출결 체크', '역할 추첨', '나눔 기록', '제출'];
 
@@ -21,7 +22,6 @@ function AppContent() {
     window.scrollTo(0, 0);
   };
 
-  // { [name]: { present: boolean, reason: string } }
   const [attendance, setAttendance] = useState({});
   const [lotteryResults, setLotteryResults] = useState(null);
   const [showMemberManage, setShowMemberManage] = useState(false);
@@ -29,6 +29,9 @@ function AppContent() {
   const [sharingData, setSharingData] = useState({ sharing: [], prayers: [] });
   const [isEditing, setIsEditing] = useState(false);
   const [initialized, setInitialized] = useState(false);
+
+  // 최신 제출 데이터 보관 (요약 화면 + 수정 시 기존 데이터 유지)
+  const latestWeekly = useRef(null);
 
   // 로그인 후 멤버 목록 + 이번 주 기존 데이터로 초기화
   useEffect(() => {
@@ -38,7 +41,8 @@ function AppContent() {
     const init = {};
 
     if (weekly) {
-      // 기존 제출 데이터로 복원
+      latestWeekly.current = weekly;
+
       const attendeeSet = new Set(weekly.attendees || []);
       const absenceMap = {};
       (weekly.absences || []).forEach(a => { absenceMap[a.name] = a.reason; });
@@ -54,22 +58,10 @@ function AppContent() {
         }
       });
 
-      // 나눔/기도제목 localStorage에 복원
-      const sharingRestore = {};
-      (weekly.sharing || []).forEach(s => {
-        sharingRestore[s.name] = { ...sharingRestore[s.name], sharing: s.content };
-      });
-      (weekly.prayers || []).forEach(p => {
-        sharingRestore[p.name] = { ...sharingRestore[p.name], prayer: p.content };
-      });
-      if (Object.keys(sharingRestore).length > 0) {
-        localStorage.setItem('blc_sharing_prayers', JSON.stringify(sharingRestore));
-      }
-
+      restoreSharingToLocalStorage(weekly);
       setIsEditing(true);
-      setStep(-1); // 요약 화면부터 시작
+      setStep(-1);
     } else {
-      // 새 제출
       user.members.forEach(name => {
         init[name] = { present: true, reason: '' };
       });
@@ -123,8 +115,45 @@ function AppContent() {
     setIsEditing(false);
   };
 
+  // 수정 모드에서 출결만 바로 저장
+  const handleQuickSave = async () => {
+    const weekly = latestWeekly.current || {};
+    try {
+      const res = await submitRecord(user.idToken, user.cellId, {
+        attendees,
+        absences,
+        sharing: weekly.sharing || [],
+        prayers: weekly.prayers || [],
+        notes: weekly.notes || '',
+      });
+      if (res.error) {
+        alert(res.error);
+      } else {
+        // 최신 데이터 업데이트
+        latestWeekly.current = {
+          attendees,
+          absences,
+          sharing: weekly.sharing || [],
+          prayers: weekly.prayers || [],
+          notes: weekly.notes || '',
+        };
+        user.weeklyData = latestWeekly.current;
+        setStep(-1);
+      }
+    } catch (err) {
+      console.error('quickSave error:', err);
+      alert('저장 중 오류가 발생했습니다.');
+    }
+  };
+
   // 제출 완료 후 요약으로 돌아가기
-  const handleSubmitDone = () => {
+  const handleSubmitDone = (submittedData) => {
+    // 최신 데이터로 갱신
+    if (submittedData) {
+      latestWeekly.current = submittedData;
+      user.weeklyData = submittedData;
+      restoreSharingToLocalStorage(submittedData);
+    }
     setStep(-1);
     setIsEditing(true);
   };
@@ -149,7 +178,7 @@ function AppContent() {
         </div>
       </header>
 
-      {step >= 0 && (
+      {!showMemberManage && step >= 0 && (
         <div className="steps-indicator">
           {STEPS.map((label, i) => (
             <div
@@ -172,7 +201,7 @@ function AppContent() {
 
         {!showMemberManage && step === -1 && (
           <WeeklySummary
-            weeklyData={user.weeklyData}
+            weeklyData={latestWeekly.current || user.weeklyData}
             onEditAttendance={() => setStep(0)}
             onEditSharing={() => setStep(2)}
             onEditAll={handleRestart}
@@ -187,6 +216,7 @@ function AppContent() {
             onSkipLottery={() => setStep(2)}
             isEditing={isEditing}
             onBackToSummary={isEditing ? () => setStep(-1) : null}
+            onQuickSave={isEditing ? handleQuickSave : null}
           />
         )}
 
@@ -214,7 +244,7 @@ function AppContent() {
             absences={absences}
             sharing={sharingData.sharing}
             prayers={sharingData.prayers}
-            notes={user.weeklyData?.notes}
+            notes={(latestWeekly.current || user.weeklyData)?.notes}
             isEditing={isEditing}
             onBack={() => setStep(2)}
             onRestart={handleRestart}
@@ -224,6 +254,20 @@ function AppContent() {
       </div>
     </div>
   );
+}
+
+// 나눔/기도제목 데이터를 localStorage에 복원
+function restoreSharingToLocalStorage(weekly) {
+  const restore = {};
+  (weekly.sharing || []).forEach(s => {
+    restore[s.name] = { ...restore[s.name], sharing: s.content };
+  });
+  (weekly.prayers || []).forEach(p => {
+    restore[p.name] = { ...restore[p.name], prayer: p.content };
+  });
+  if (Object.keys(restore).length > 0) {
+    localStorage.setItem('blc_sharing_prayers', JSON.stringify(restore));
+  }
 }
 
 export default function App() {
