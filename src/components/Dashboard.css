@@ -539,6 +539,114 @@
   margin-bottom: 14px;
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   PC/Mac 반응형 (768px 이상)
+   ═══════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 768px) {
+  /* 전체 출석률 카드 더 크게 */
+  .dash-overall-card {
+    padding: 32px 28px;
+  }
+
+  .dash-overall-rate {
+    font-size: 64px;
+  }
+
+  /* 셀별 출석률 2열 그리드 */
+  .dash-cell-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  /* 탭 중앙 정렬 + 간격 넓게 */
+  .dash-tabs {
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .dash-tab {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+
+  /* 섹션 패딩 넓게 */
+  .dash-section {
+    padding: 24px 28px;
+  }
+
+  .dash-section h3 {
+    font-size: 18px;
+  }
+
+  /* 패턴 테이블 글자 크게 */
+  .dash-pattern-table {
+    font-size: 14px;
+  }
+
+  .dash-pattern-table th {
+    font-size: 13px;
+    padding: 10px 8px;
+  }
+
+  .dash-pattern-table td {
+    padding: 12px 8px;
+  }
+
+  /* 결석 사유 바 높이 */
+  .dash-reason-bar-bg {
+    height: 32px;
+  }
+
+  .dash-reason-label {
+    font-size: 14px;
+    min-width: 80px;
+  }
+
+  .dash-reason-count {
+    font-size: 14px;
+    min-width: 80px;
+  }
+
+  /* 연속 결석 2열 */
+  .dash-alert-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  /* 멤버 상황 2열 */
+  .dash-member-summary-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  /* 필터 드롭다운 폭 제한 */
+  .dash-filter {
+    max-width: 300px;
+  }
+
+  /* N주 설정 간격 */
+  .dash-weeks-control {
+    gap: 12px;
+  }
+
+  .dash-weeks-value {
+    font-size: 18px;
+  }
+
+  /* 헤더 */
+  .dash-header-text h2 {
+    font-size: 24px;
+  }
+
+  .dash-header-text p {
+    font-size: 14px;
+  }
+}
+
 /* ── Error ─────────────────────────────────────────────────────── */
 .dash-error {
   background: var(--danger-light);

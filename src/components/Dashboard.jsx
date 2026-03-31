@@ -107,7 +107,7 @@ export default function Dashboard({ data, onBack }) {
   }
 
   return (
-    <div>
+    <div className="dashboard-wide">
       <DashHeader onBack={onBack} />
 
       <div className="dash-tabs">

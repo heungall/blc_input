@@ -37,6 +37,11 @@ body {
   flex-direction: column;
 }
 
+/* PC에서 대시보드는 넓게 */
+#root:has(.dashboard-wide) {
+  max-width: 960px;
+}
+
 button {
   cursor: pointer;
   font-family: inherit;
