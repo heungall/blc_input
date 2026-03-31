@@ -49,6 +49,13 @@ export async function fetchDashboard(idToken) {
 }
 
 /**
+ * 멤버 셀 이동 (admin 전용)
+ */
+export async function moveMember(idToken, name, fromCellId, toCellId) {
+  return postAction({ action: 'moveMember', idToken, name, fromCellId, toCellId });
+}
+
+/**
  * 새신자/방문자 카드 제출 (인증 불필요)
  */
 export async function submitNewcomer(data) {

@@ -116,6 +116,19 @@ function doPost(e) {
       return respond(deactivateMember(cellId, name));
     }
 
+    if (action === 'moveMember') {
+      // [SECURE] admin만 멤버 셀 이동 가능
+      var callerInfo = getCell(email);
+      if (callerInfo.error || callerInfo.role !== 'admin') {
+        return respond({ error: '멤버 이동 권한이 없습니다.' });
+      }
+      var memberName = sanitizeName(data.name);
+      var fromCellId = sanitizeCellId(data.fromCellId);
+      var toCellId   = sanitizeCellId(data.toCellId);
+      if (!memberName || !fromCellId || !toCellId) return respond({ error: '유효하지 않은 입력값입니다.' });
+      return respond(moveMember(memberName, fromCellId, toCellId));
+    }
+
     if (action === 'submit') {
       return respond(submitRecord(email, data));
     }
@@ -236,6 +249,24 @@ function deactivateMember(cellId, name) {
     }
   }
   return { error: '멤버를 찾을 수 없습니다.' };
+}
+
+/**
+ * 멤버를 다른 셀로 이동 (admin 전용)
+ */
+function moveMember(name, fromCellId, toCellId) {
+  var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = ss.getSheetByName(SHEET_MEMBERS);
+  var rows  = sheet.getDataRange().getValues();
+
+  for (var i = 1; i < rows.length; i++) {
+    if (rows[i][1] === name && rows[i][0] === fromCellId) {
+      // [SECURE] cell_id만 변경 — 기존 active 상태 유지
+      sheet.getRange(i + 1, 1).setValue(toCellId);
+      return { success: true };
+    }
+  }
+  return { error: '해당 멤버를 찾을 수 없습니다.' };
 }
 
 /**

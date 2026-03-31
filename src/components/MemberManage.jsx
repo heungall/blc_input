@@ -1,13 +1,25 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { addMember, deactivateMember } from '../services/api';
+import { addMember, deactivateMember, moveMember, fetchDashboard } from '../services/api';
 
 export default function MemberManage({ members, setMembers, onClose }) {
   const { user } = useAuth();
   const [newName, setNewName] = useState('');
   const [adding, setAdding] = useState(false);
   const [removing, setRemoving] = useState(null);
+  const [moving, setMoving] = useState(null); // 이동 중인 멤버 이름
+  const [cells, setCells] = useState([]);
   const inputRef = useRef(null);
+
+  const isAdmin = user.role === 'admin';
+
+  // admin일 때 셀 목록 로드
+  useEffect(() => {
+    if (!isAdmin) return;
+    fetchDashboard(user.idToken).then(res => {
+      if (res.cells) setCells(res.cells.filter(c => c.cellId !== user.cellId));
+    }).catch(() => {});
+  }, [isAdmin, user.idToken, user.cellId]);
 
   const handleAdd = async () => {
     const trimmed = newName.trim();
@@ -42,6 +54,26 @@ export default function MemberManage({ members, setMembers, onClose }) {
     }
   };
 
+  const handleMove = async (name, toCellId) => {
+    const targetCell = cells.find(c => c.cellId === toCellId);
+    if (!confirm(`${name}님을 ${targetCell?.cellName || toCellId}(으)로 이동하시겠습니까?`)) return;
+
+    setMoving(name);
+    try {
+      const res = await moveMember(user.idToken, name, user.cellId, toCellId);
+      if (res.error) {
+        alert(res.error);
+      } else {
+        setMembers(prev => prev.filter(n => n !== name));
+      }
+    } catch (err) {
+      console.error('moveMember error:', err);
+      alert('멤버 이동에 실패했습니다.');
+    } finally {
+      setMoving(null);
+    }
+  };
+
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -64,13 +96,30 @@ export default function MemberManage({ members, setMembers, onClose }) {
           {members.map(name => (
             <div className="member-manage-item" key={name}>
               <span className="member-manage-name">{name}</span>
-              <button
-                className="member-manage-remove"
-                onClick={() => handleDeactivate(name)}
-                disabled={removing === name}
-              >
-                {removing === name ? '...' : '비활성화'}
-              </button>
+              <div className="member-manage-actions">
+                {isAdmin && cells.length > 0 && (
+                  <select
+                    className="member-move-select"
+                    value=""
+                    onChange={(e) => {
+                      if (e.target.value) handleMove(name, e.target.value);
+                    }}
+                    disabled={moving === name}
+                  >
+                    <option value="">{moving === name ? '이동 중...' : '셀 이동'}</option>
+                    {cells.map(c => (
+                      <option key={c.cellId} value={c.cellId}>{c.cellName}</option>
+                    ))}
+                  </select>
+                )}
+                <button
+                  className="member-manage-remove"
+                  onClick={() => handleDeactivate(name)}
+                  disabled={removing === name}
+                >
+                  {removing === name ? '...' : '비활성화'}
+                </button>
+              </div>
             </div>
           ))}
           {members.length === 0 && (
