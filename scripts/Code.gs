@@ -74,12 +74,19 @@ function doPost(e) {
     const action = data.action;
 
     if (action === 'login') {
-      const cellInfo = getCell(email);
+      var cellInfo = getCell(email);
       if (cellInfo.error) return respond(cellInfo);
-      const { members } = getMembers(cellInfo.cellId);
+      var loginMembers = getMembers(cellInfo.cellId);
       // 로그인 시 이번 주 기존 제출 데이터도 함께 반환
-      const weekly = getWeeklySubmission(cellInfo.cellId);
-      return respond({ ...cellInfo, members, weeklyData: weekly });
+      var weekly = getWeeklySubmission(cellInfo.cellId);
+      return respond({
+        cellId:      cellInfo.cellId,
+        cellName:    cellInfo.cellName,
+        leaderEmail: cellInfo.leaderEmail,
+        role:        cellInfo.role,
+        members:     loginMembers.members,
+        weeklyData:  weekly
+      });
     }
 
     if (action === 'addMember') {
@@ -99,6 +106,11 @@ function doPost(e) {
 
     if (action === 'submit') {
       return respond(submitRecord(email, data));
+    }
+
+    if (action === 'dashboard') {
+      // [SECURE] admin 권한 확인 후 대시보드 데이터 반환
+      return respond(getDashboardData(email));
     }
 
     return respond({ error: '알 수 없는 요청입니다.' });
@@ -171,6 +183,7 @@ function getCell(email) {
         cellId:      rows[i][0],
         cellName:    rows[i][1],
         leaderEmail: rows[i][2],
+        role:        rows[i][3] || 'leader', // [SECURE] role 컬럼 (index 3), 기본값 leader
       };
     }
   }
@@ -348,6 +361,131 @@ function submitRecord(email, data) {
   return { success: true, date: date, updated: isUpdate };
 }
 
+// ─── 대시보드 (admin 전용) ──────────────────────────────────────────────────
+
+/**
+ * admin 권한 확인 후 전체 대시보드 데이터 반환
+ * @param {string} email — 인증된 사용자 이메일
+ * @returns {Object} cells, members, attendance, submissions 또는 에러
+ */
+function getDashboardData(email) {
+  // [SECURE] admin 권한 확인 — 셀_리더 시트에서 role 검증
+  var cellInfo = getCell(email);
+  if (cellInfo.error) return { error: '등록되지 않은 계정입니다.' };
+  if (cellInfo.role !== 'admin') {
+    // [SECURE] 권한 없는 접근 시도 로깅 — 내부 정보 노출 금지
+    Logger.log('Unauthorized dashboard access attempt: ' + email);
+    return { error: '대시보드 접근 권한이 없습니다.' };
+  }
+
+  return {
+    cells:       getAllCells(),
+    members:     getAllMembers(),
+    attendance:  getAllAttendance(),
+    submissions: getAllSubmissions()
+  };
+}
+
+/**
+ * 모든 셀 정보 조회
+ * @returns {Array} [{ cellId, cellName, leaderEmail }]
+ */
+function getAllCells() {
+  var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = ss.getSheetByName(SHEET_LEADER);
+  var rows  = sheet.getDataRange().getValues();
+  var result = [];
+
+  for (var i = 1; i < rows.length; i++) {
+    result.push({
+      cellId:      rows[i][0],
+      cellName:    rows[i][1],
+      leaderEmail: rows[i][2]
+    });
+  }
+  return result;
+}
+
+/**
+ * 모든 멤버 조회 (active 여부 포함)
+ * @returns {Array} [{ cellId, name, active }]
+ */
+function getAllMembers() {
+  var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = ss.getSheetByName(SHEET_MEMBERS);
+  var rows  = sheet.getDataRange().getValues();
+  var result = [];
+
+  for (var i = 1; i < rows.length; i++) {
+    result.push({
+      cellId: rows[i][0],
+      name:   rows[i][1],
+      active: rows[i][2] === true
+    });
+  }
+  return result;
+}
+
+/**
+ * 전체 출결 기록 조회
+ * @returns {Array} [{ date, cellId, memberName, status, absenceReason }]
+ */
+function getAllAttendance() {
+  var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = ss.getSheetByName(SHEET_ATTENDANCE);
+  var rows  = sheet.getDataRange().getValues();
+  var result = [];
+
+  for (var i = 1; i < rows.length; i++) {
+    var dateVal = rows[i][0];
+    var dateStr = '';
+    if (dateVal instanceof Date) {
+      dateStr = Utilities.formatDate(dateVal, 'Asia/Seoul', 'yyyy-MM-dd');
+    } else {
+      dateStr = String(dateVal);
+    }
+
+    result.push({
+      date:          dateStr,
+      cellId:        rows[i][1],
+      memberName:    rows[i][2],
+      status:        rows[i][3],
+      absenceReason: rows[i][4] || ''
+    });
+  }
+  return result;
+}
+
+/**
+ * 전체 제출 기록 조회 (sharing, prayers 텍스트만)
+ * @returns {Array} [{ date, cellId, cellName, sharing, prayers }]
+ */
+function getAllSubmissions() {
+  var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = ss.getSheetByName(SHEET_SUBMISSIONS);
+  var rows  = sheet.getDataRange().getValues();
+  var result = [];
+
+  for (var i = 1; i < rows.length; i++) {
+    var dateVal = rows[i][0];
+    var dateStr = '';
+    if (dateVal instanceof Date) {
+      dateStr = Utilities.formatDate(dateVal, 'Asia/Seoul', 'yyyy-MM-dd');
+    } else {
+      dateStr = String(dateVal);
+    }
+
+    result.push({
+      date:     dateStr,
+      cellId:   rows[i][1],
+      cellName: rows[i][2],
+      sharing:  rows[i][6] || '',
+      prayers:  rows[i][7] || ''
+    });
+  }
+  return result;
+}
+
 // ─── 유틸리티 ───────────────────────────────────────────────────────────────
 
 function respond(data) {
@@ -383,13 +521,13 @@ function sanitizeName(val) {
 function initSheets() {
   var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
 
-  // 셀_리더 시트
+  // 셀_리더 시트 (role 컬럼 포함)
   var leaderSheet = ss.getSheetByName(SHEET_LEADER);
   if (!leaderSheet) {
     leaderSheet = ss.insertSheet(SHEET_LEADER);
-    leaderSheet.appendRow(['cell_id', 'cell_name', 'leader_email']);
-    leaderSheet.appendRow(['cell_01', '기쁨셀', 'leader1@gmail.com']);
-    leaderSheet.appendRow(['cell_02', '소망셀', 'leader2@gmail.com']);
+    leaderSheet.appendRow(['cell_id', 'cell_name', 'leader_email', 'role']);
+    leaderSheet.appendRow(['cell_01', '기쁨셀', 'leader1@gmail.com', 'leader']);
+    leaderSheet.appendRow(['cell_02', '소망셀', 'leader2@gmail.com', 'leader']);
   }
 
   // 멤버 시트

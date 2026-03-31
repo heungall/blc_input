@@ -8,7 +8,8 @@ import Lottery from './components/Lottery';
 import SharingPrayers from './components/SharingPrayers';
 import Submit from './components/Submit';
 import MemberManage from './components/MemberManage';
-import { submitRecord } from './services/api';
+import Dashboard from './components/Dashboard';
+import { submitRecord, fetchDashboard } from './services/api';
 
 const STEPS = ['출결 체크', '역할 추첨', '나눔 기록', '제출'];
 
@@ -29,6 +30,8 @@ function AppContent() {
   const [sharingData, setSharingData] = useState({ sharing: [], prayers: [] });
   const [isEditing, setIsEditing] = useState(false);
   const [initialized, setInitialized] = useState(false);
+  const [showDashboard, setShowDashboard] = useState(false);
+  const [dashboardData, setDashboardData] = useState(null);
 
   // 최신 제출 데이터 보관 (요약 화면 + 수정 시 기존 데이터 유지)
   const latestWeekly = useRef(null);
@@ -146,6 +149,25 @@ function AppContent() {
     }
   };
 
+  // 대시보드 열기 (admin만)
+  const openDashboard = async () => {
+    setShowDashboard(true);
+    setDashboardData(null);
+    try {
+      const res = await fetchDashboard(user.idToken);
+      if (res.error) {
+        alert(res.error);
+        setShowDashboard(false);
+      } else {
+        setDashboardData(res);
+      }
+    } catch (err) {
+      console.error('dashboard error:', err);
+      alert('대시보드 데이터를 불러올 수 없습니다.');
+      setShowDashboard(false);
+    }
+  };
+
   // 제출 완료 후 요약으로 돌아가기
   const handleSubmitDone = (submittedData) => {
     // 최신 데이터로 갱신
@@ -168,6 +190,11 @@ function AppContent() {
           <p>{user.cellName}</p>
         </div>
         <div className="header-user">
+          {user.role === 'admin' && (
+            <button className="header-icon-btn" onClick={openDashboard} title="대시보드">
+              &#9776;
+            </button>
+          )}
           <button className="header-icon-btn" onClick={() => setShowMemberManage(true)} title="멤버 관리">
             &#9881;
           </button>
@@ -178,7 +205,7 @@ function AppContent() {
         </div>
       </header>
 
-      {!showMemberManage && step >= 0 && (
+      {!showMemberManage && !showDashboard && step >= 0 && (
         <div className="steps-indicator">
           {STEPS.map((label, i) => (
             <div
@@ -191,7 +218,14 @@ function AppContent() {
       )}
 
       <div className="content">
-        {showMemberManage && (
+        {showDashboard && (
+          <Dashboard
+            data={dashboardData}
+            onBack={() => setShowDashboard(false)}
+          />
+        )}
+
+        {!showDashboard && showMemberManage && (
           <MemberManage
             members={memberList}
             setMembers={setMemberList}
@@ -199,7 +233,7 @@ function AppContent() {
           />
         )}
 
-        {!showMemberManage && step === -1 && (
+        {!showDashboard && !showMemberManage && step === -1 && (
           <WeeklySummary
             weeklyData={latestWeekly.current || user.weeklyData}
             onEditAttendance={() => setStep(0)}
@@ -208,7 +242,7 @@ function AppContent() {
           />
         )}
 
-        {!showMemberManage && step === 0 && (
+        {!showDashboard && !showMemberManage && step === 0 && (
           <Attendance
             attendance={attendance}
             setAttendance={setAttendance}
@@ -220,7 +254,7 @@ function AppContent() {
           />
         )}
 
-        {!showMemberManage && step === 1 && (
+        {!showDashboard && !showMemberManage && step === 1 && (
           <Lottery
             names={attendees}
             initialResults={lotteryResults}
@@ -229,7 +263,7 @@ function AppContent() {
           />
         )}
 
-        {!showMemberManage && step === 2 && (
+        {!showDashboard && !showMemberManage && step === 2 && (
           <SharingPrayers
             attendees={attendees}
             onNext={handleSharingNext}
@@ -238,7 +272,7 @@ function AppContent() {
           />
         )}
 
-        {!showMemberManage && step === 3 && (
+        {!showDashboard && !showMemberManage && step === 3 && (
           <Submit
             attendees={attendees}
             absences={absences}

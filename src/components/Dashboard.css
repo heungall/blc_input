@@ -1,0 +1,551 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Dashboard — 목사님 대시보드
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Header */
+.dash-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.dash-back-btn {
+  background: var(--primary-light);
+  color: var(--primary);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+.dash-back-btn:active {
+  background: var(--primary);
+  color: white;
+}
+
+.dash-header-text h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.dash-header-text p {
+  font-size: 13px;
+  color: var(--text-light);
+}
+
+/* Loading */
+.dash-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  color: var(--text-light);
+  font-size: 15px;
+  gap: 16px;
+}
+
+.dash-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: dashSpin 0.8s linear infinite;
+}
+
+@keyframes dashSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* Section tabs */
+.dash-tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  margin-bottom: 16px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.dash-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.dash-tab {
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--card-bg);
+  color: var(--text-light);
+  border: 1.5px solid var(--border);
+  transition: all 0.2s;
+}
+
+.dash-tab.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.dash-tab:active {
+  transform: scale(0.96);
+}
+
+/* ── 전체 출석률 카드 ──────────────────────────────────────────── */
+.dash-overall-card {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: white;
+  border-radius: var(--radius);
+  padding: 24px 20px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.dash-overall-label {
+  font-size: 14px;
+  opacity: 0.85;
+  margin-bottom: 8px;
+}
+
+.dash-overall-rate {
+  font-size: 48px;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.dash-overall-detail {
+  font-size: 13px;
+  opacity: 0.7;
+}
+
+.dash-week-label {
+  font-size: 12px;
+  opacity: 0.6;
+  margin-top: 8px;
+}
+
+/* ── 셀별 출석률 ───────────────────────────────────────────────── */
+.dash-cell-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.dash-cell-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.dash-cell-rate-circle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.dash-cell-rate-circle.high {
+  background: var(--success-light);
+  color: var(--success);
+}
+
+.dash-cell-rate-circle.mid {
+  background: #FFF3E0;
+  color: #F57C00;
+}
+
+.dash-cell-rate-circle.low {
+  background: var(--danger-light);
+  color: var(--danger);
+}
+
+.dash-cell-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.dash-cell-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.dash-cell-bar-bg {
+  height: 8px;
+  background: var(--bg);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.dash-cell-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.6s ease;
+}
+
+.dash-cell-bar-fill.high {
+  background: var(--success);
+}
+
+.dash-cell-bar-fill.mid {
+  background: #F57C00;
+}
+
+.dash-cell-bar-fill.low {
+  background: var(--danger);
+}
+
+.dash-cell-detail {
+  font-size: 12px;
+  color: var(--text-light);
+  margin-top: 4px;
+}
+
+/* ── 셀 필터 드롭다운 ─────────────────────────────────────────── */
+.dash-filter {
+  margin-bottom: 16px;
+}
+
+.dash-filter-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-light);
+  margin-bottom: 6px;
+}
+
+.dash-select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--card-bg);
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888899' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.dash-select:focus {
+  border-color: var(--primary);
+}
+
+/* ── N주 설정 ──────────────────────────────────────────────────── */
+.dash-weeks-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.dash-weeks-label {
+  font-size: 13px;
+  color: var(--text-light);
+  font-weight: 600;
+}
+
+.dash-weeks-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--primary-light);
+  color: var(--primary);
+  font-size: 18px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.dash-weeks-btn:active {
+  background: var(--primary);
+  color: white;
+}
+
+.dash-weeks-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.dash-weeks-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--primary);
+  min-width: 24px;
+  text-align: center;
+}
+
+/* ── 멤버별 출석 패턴 테이블 ───────────────────────────────────── */
+.dash-pattern-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.dash-pattern-table th {
+  font-weight: 600;
+  color: var(--text-light);
+  padding: 8px 6px;
+  text-align: center;
+  border-bottom: 2px solid var(--border);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.dash-pattern-table th:first-child {
+  text-align: left;
+  min-width: 60px;
+}
+
+.dash-pattern-table td {
+  padding: 10px 6px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+}
+
+.dash-pattern-table td:first-child {
+  text-align: left;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.dash-pattern-table tr:last-child td {
+  border-bottom: none;
+}
+
+.pattern-present {
+  color: var(--success);
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.pattern-absent {
+  color: var(--danger);
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.pattern-none {
+  color: var(--border);
+  font-size: 15px;
+}
+
+/* ── 결석 사유 분류 차트 ───────────────────────────────────────── */
+.dash-reason-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dash-reason-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dash-reason-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  min-width: 70px;
+  flex-shrink: 0;
+}
+
+.dash-reason-bar-bg {
+  flex: 1;
+  height: 24px;
+  background: var(--bg);
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+}
+
+.dash-reason-bar-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.6s ease;
+  min-width: 2px;
+}
+
+.dash-reason-bar-fill.work {
+  background: #42A5F5;
+}
+
+.dash-reason-bar-fill.personal {
+  background: #FFA726;
+}
+
+.dash-reason-bar-fill.travel {
+  background: #66BB6A;
+}
+
+.dash-reason-bar-fill.other {
+  background: #AB47BC;
+}
+
+.dash-reason-count {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-light);
+  min-width: 42px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.dash-no-data {
+  text-align: center;
+  padding: 24px 16px;
+  color: var(--text-light);
+  font-size: 14px;
+}
+
+/* ── 연속 결석 알림 ────────────────────────────────────────────── */
+.dash-alert-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dash-alert-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--danger-light);
+  border-radius: var(--radius);
+  border-left: 4px solid var(--danger);
+}
+
+.dash-alert-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.dash-alert-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.dash-alert-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--danger);
+  margin-bottom: 2px;
+}
+
+.dash-alert-detail {
+  font-size: 12px;
+  color: var(--text-light);
+}
+
+.dash-alert-weeks {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--danger);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── 멤버 상황 요약 ────────────────────────────────────────────── */
+.dash-member-summary-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dash-member-summary-item {
+  background: var(--bg);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+
+.dash-member-summary-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 8px;
+}
+
+.dash-member-summary-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.dash-member-summary-row:last-child {
+  margin-bottom: 0;
+}
+
+.dash-member-summary-tag {
+  font-weight: 600;
+  color: var(--text);
+  flex-shrink: 0;
+  min-width: 52px;
+}
+
+.dash-member-summary-value {
+  color: var(--text-light);
+  word-break: break-word;
+}
+
+.dash-member-summary-empty {
+  color: var(--border);
+  font-style: italic;
+}
+
+/* ── Card sections ─────────────────────────────────────────────── */
+.dash-section {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.dash-section h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 14px;
+}
+
+/* ── Error ─────────────────────────────────────────────────────── */
+.dash-error {
+  background: var(--danger-light);
+  color: var(--danger);
+  border-radius: var(--radius);
+  padding: 16px;
+  font-size: 14px;
+  text-align: center;
+  margin-bottom: 16px;
+}

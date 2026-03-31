@@ -39,6 +39,15 @@ export async function submitRecord(idToken, cellId, record) {
   return postAction({ action: 'submit', idToken, cellId, ...record });
 }
 
+/**
+ * 대시보드 데이터 조회 (목사님용)
+ * @param {string} idToken — Google ID 토큰
+ * @returns {{ cells, members, attendance, submissions } | { error }}
+ */
+export async function fetchDashboard(idToken) {
+  return postAction({ action: 'dashboard', idToken });
+}
+
 // ─── 내부 헬퍼 ──────────────────────────────────────────────────────────────
 
 async function postAction(body) {

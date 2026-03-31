@@ -11,6 +11,7 @@ import { createContext, useContext, useState, useCallback } from 'react';
  *   cellName:   string,
  *   members:    string[],
  *   weeklyData: object|null,  // 이번 주 기존 제출 데이터
+ *   role:       string,       // 'leader' | 'admin'
  * }
  */
 
@@ -30,6 +31,7 @@ export function AuthProvider({ children }) {
       cellName:   cellInfo.cellName,
       members:    cellInfo.members || [],
       weeklyData: cellInfo.weeklyData || null,
+      role:       cellInfo.role || 'leader',
     });
   }, []);
 
