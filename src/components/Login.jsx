@@ -38,6 +38,7 @@ export default function Login() {
     try {
       // Apps Script에서 토큰 검증 + 소속 셀 + 멤버 목록 조회
       const result = await loginWithToken(idToken);
+      console.log('Login response:', JSON.stringify(result));
       if (result.error) {
         setError(result.error);
         return;
