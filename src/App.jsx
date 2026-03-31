@@ -14,7 +14,12 @@ const STEPS = ['출결 체크', '역할 추첨', '나눔 기록', '제출'];
 // step: -1 = 요약(이번 주 기록 있을 때), 0~3 = 입력 흐름
 function AppContent() {
   const { user, logout } = useAuth();
-  const [step, setStep] = useState(0);
+  const [step, setStepRaw] = useState(0);
+
+  const setStep = (s) => {
+    setStepRaw(s);
+    window.scrollTo(0, 0);
+  };
 
   // { [name]: { present: boolean, reason: string } }
   const [attendance, setAttendance] = useState({});
