@@ -394,7 +394,8 @@ function getDashboardData(email) {
     cells:       getAllCells(),
     members:     getAllMembers(),
     attendance:  getAllAttendance(),
-    submissions: getAllSubmissions()
+    submissions: getAllSubmissions(),
+    newcomers:   getAllNewcomers()
   };
 }
 
@@ -428,14 +429,32 @@ function getAllMembers() {
   var rows  = sheet.getDataRange().getValues();
   var result = [];
 
+  // 셀 없는 멤버는 admin(목사님) 셀로 매핑
+  var adminCellId = getAdminCellId();
+
   for (var i = 1; i < rows.length; i++) {
+    var cellId = rows[i][0] || adminCellId;
     result.push({
-      cellId: rows[i][0],
+      cellId: cellId,
       name:   rows[i][1],
       active: rows[i][2] === true
     });
   }
   return result;
+}
+
+/**
+ * admin role을 가진 셀의 cellId 반환
+ */
+function getAdminCellId() {
+  var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = ss.getSheetByName(SHEET_LEADER);
+  var rows  = sheet.getDataRange().getValues();
+
+  for (var i = 1; i < rows.length; i++) {
+    if (rows[i][3] === 'admin') return rows[i][0];
+  }
+  return 'cell_00'; // fallback
 }
 
 /**
@@ -493,6 +512,31 @@ function getAllSubmissions() {
       cellName: rows[i][2],
       sharing:  rows[i][6] || '',
       prayers:  rows[i][7] || ''
+    });
+  }
+  return result;
+}
+
+/**
+ * 전체 새신자 기록 조회
+ * @returns {Array} [{ date, name, phone, address, visitReason, visitChannel, faith, prevChurch, afterPlan }]
+ */
+function getAllNewcomers() {
+  var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = ss.getSheetByName(SHEET_NEWCOMERS);
+  if (!sheet) return [];
+  var rows  = sheet.getDataRange().getValues();
+  var result = [];
+
+  // [SECURE] phone 미포함 — PII 최소 노출
+  for (var i = 1; i < rows.length; i++) {
+    result.push({
+      date:         String(rows[i][0] || ''),
+      name:         String(rows[i][1] || ''),
+      visitReason:  String(rows[i][4] || ''),
+      visitChannel: String(rows[i][5] || ''),
+      faith:        String(rows[i][6] || ''),
+      afterPlan:    String(rows[i][9] || '')
     });
   }
   return result;

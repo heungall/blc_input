@@ -75,6 +75,7 @@ const SECTIONS = [
   { id: 'reasons',   label: '결석 사유' },
   { id: 'alerts',    label: '연속 결석' },
   { id: 'status',    label: '멤버 상황' },
+  { id: 'newcomers', label: '새신자' },
 ];
 
 // ─── 메인 컴포넌트 ──────────────────────────────────────────────────────────
@@ -94,7 +95,7 @@ export default function Dashboard({ data, onBack }) {
     );
   }
 
-  const { cells, members, attendance, submissions } = data;
+  const { cells, members, attendance, submissions, newcomers } = data;
 
   // ── 에러 가드 ──
   if (!cells || !members || !attendance) {
@@ -165,6 +166,10 @@ export default function Dashboard({ data, onBack }) {
           selectedCell={selectedCell}
           setSelectedCell={setSelectedCell}
         />
+      )}
+
+      {activeTab === 'newcomers' && (
+        <NewcomersSection newcomers={newcomers || []} />
       )}
     </div>
   );
@@ -691,6 +696,50 @@ function StatusSection({ cells, members, submissions, selectedCell, setSelectedC
                   최근 기록: {member.date}
                 </div>
               )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── [6] 새신자 현황 ───────────────────────────────────────────────────────
+
+function NewcomersSection({ newcomers }) {
+  const sorted = useMemo(() =>
+    [...newcomers].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+    [newcomers]
+  );
+
+  return (
+    <div className="dash-section">
+      <h3>새신자 / 방문자 ({newcomers.length}명)</h3>
+
+      {sorted.length === 0 ? (
+        <div className="dash-no-data">등록된 새신자가 없습니다.</div>
+      ) : (
+        <div className="dash-newcomer-list">
+          {sorted.map((nc, i) => (
+            <div key={`${nc.name}-${nc.date}-${i}`} className="dash-newcomer-item">
+              <div className="dash-newcomer-header">
+                <span className="dash-newcomer-name">{nc.name}</span>
+                <span className="dash-newcomer-date">{nc.date}</span>
+              </div>
+              <div className="dash-newcomer-tags">
+                {nc.visitReason && (
+                  <span className="dash-newcomer-tag visit">{nc.visitReason}</span>
+                )}
+                {nc.visitChannel && (
+                  <span className="dash-newcomer-tag channel">{nc.visitChannel}</span>
+                )}
+                {nc.faith && (
+                  <span className="dash-newcomer-tag faith">{nc.faith}</span>
+                )}
+                {nc.afterPlan && (
+                  <span className="dash-newcomer-tag plan">{nc.afterPlan}</span>
+                )}
+              </div>
             </div>
           ))}
         </div>

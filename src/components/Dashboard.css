@@ -539,6 +539,70 @@
   margin-bottom: 14px;
 }
 
+/* ── 새신자 현황 ──────────────────────────────────────────────── */
+.dash-newcomer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dash-newcomer-item {
+  background: var(--bg);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+
+.dash-newcomer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.dash-newcomer-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.dash-newcomer-date {
+  font-size: 12px;
+  color: var(--text-light);
+}
+
+.dash-newcomer-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.dash-newcomer-tag {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+.dash-newcomer-tag.visit {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.dash-newcomer-tag.channel {
+  background: #E3F2FD;
+  color: #1976D2;
+}
+
+.dash-newcomer-tag.faith {
+  background: #FFF3E0;
+  color: #F57C00;
+}
+
+.dash-newcomer-tag.plan {
+  background: var(--success-light);
+  color: var(--success);
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    PC/Mac 반응형 (768px 이상)
    ═══════════════════════════════════════════════════════════════════ */
@@ -635,6 +699,13 @@
 
   .dash-weeks-value {
     font-size: 18px;
+  }
+
+  /* 새신자 2열 */
+  .dash-newcomer-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
   }
 
   /* 헤더 */
