@@ -98,13 +98,15 @@ export default function Attendance({ attendance, setAttendance, onNext, onSkipLo
                     {attendance[name].present ? '출석' : '결석'}
                   </span>
                 </button>
-                <button
-                  className="attendance-remove"
-                  onClick={() => handleDeactivate(name)}
-                  title="비활성화"
-                >
-                  &times;
-                </button>
+                {attendance[name].present && (
+                  <button
+                    className="attendance-absent-btn"
+                    onClick={() => togglePresence(name)}
+                    title="결석 처리"
+                  >
+                    &times;
+                  </button>
+                )}
               </div>
 
               {!attendance[name].present && (

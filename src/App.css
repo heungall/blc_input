@@ -518,18 +518,19 @@
   font-weight: 500;
 }
 
-.attendance-remove {
-  background: transparent;
-  color: var(--text-light);
+.attendance-absent-btn {
+  background: var(--danger-light, #FEE2E2);
+  color: var(--danger);
   font-size: 18px;
-  padding: 0 8px;
-  opacity: 0.4;
-  transition: opacity 0.2s;
+  font-weight: 700;
+  padding: 0 12px;
+  border-radius: 0 var(--radius) var(--radius) 0;
+  transition: background 0.2s;
 }
 
-.attendance-remove:active {
-  opacity: 1;
-  color: var(--danger);
+.attendance-absent-btn:active {
+  background: var(--danger);
+  color: white;
 }
 
 .attendance-summary {
