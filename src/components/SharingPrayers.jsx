@@ -19,34 +19,52 @@ function parseBulkText(text, names) {
   const result = {};
   if (!text.trim() || names.length === 0) return result;
 
-  // 이름을 긴 순서로 정렬 (부분 매칭 방지: "김지현" 이 "김지" 보다 먼저 매칭)
-  const sortedNames = [...names].sort((a, b) => b.length - a.length);
-
-  // 이름 패턴: 이름 뒤에 구분자(: - 공백 탭 등)
+  // 풀네임 → 뒤 두 글자 별명 매핑 (예: "김주원" → "주원")
   // [SECURE] 이름은 이미 sanitize된 멤버 목록에서 옴 — regex injection 위험 없음
-  const namePattern = sortedNames.map(n => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+  const aliasToFull = {};
+  const allPatterns = [];
+
+  names.forEach(name => {
+    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    allPatterns.push(escaped);
+    aliasToFull[name] = name;
+
+    // 3글자 이상이면 뒤 두 글자도 별명으로 등록
+    if (name.length >= 3) {
+      const suffix = name.slice(-2);
+      // 다른 멤버의 뒤 두 글자와 겹치지 않을 때만 등록
+      const isDuplicate = names.some(other => other !== name && other.slice(-2) === suffix);
+      if (!isDuplicate && !aliasToFull[suffix]) {
+        const escapedSuffix = suffix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        allPatterns.push(escapedSuffix);
+        aliasToFull[suffix] = name;
+      }
+    }
+  });
+
+  // 긴 패턴 우선 매칭 (풀네임이 별명보다 먼저)
+  allPatterns.sort((a, b) => b.length - a.length);
+
+  const namePattern = allPatterns.join('|');
   const regex = new RegExp(`(${namePattern})\\s*[:\\-\\s]\\s*`, 'g');
 
   // 각 이름의 위치를 찾아서 그 사이의 텍스트를 추출
   const matches = [];
   let match;
   while ((match = regex.exec(text)) !== null) {
+    const fullName = aliasToFull[match[1]] || match[1];
     matches.push({
-      name: match[1],
+      name: fullName,
+      matchedText: match[1],
+      matchStart: match.index,
       contentStart: match.index + match[0].length,
     });
   }
 
   for (let i = 0; i < matches.length; i++) {
     const start = matches[i].contentStart;
-    const end = i + 1 < matches.length ? matches[i + 1].contentStart - (text.substring(matches[i + 1].contentStart).length - text.substring(matches[i + 1].contentStart).length) : text.length;
-
-    // 다음 매칭의 원래 시작 위치 (이름 포함)까지
-    const nextMatchOrigStart = i + 1 < matches.length
-      ? text.lastIndexOf(matches[i + 1].name, matches[i + 1].contentStart)
-      : text.length;
-
-    const content = text.substring(start, nextMatchOrigStart).trim();
+    const nextStart = i + 1 < matches.length ? matches[i + 1].matchStart : text.length;
+    const content = text.substring(start, nextStart).trim();
     if (content) {
       result[matches[i].name] = content;
     }
