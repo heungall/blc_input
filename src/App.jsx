@@ -9,12 +9,14 @@ import SharingPrayers from './components/SharingPrayers';
 import Submit from './components/Submit';
 import MemberManage from './components/MemberManage';
 import Dashboard from './components/Dashboard';
+import LandingPage from './components/LandingPage';
+import NewMemberForm from './components/NewMemberForm';
 import { submitRecord, fetchDashboard } from './services/api';
 
 const STEPS = ['출결 체크', '역할 추첨', '나눔 기록', '제출'];
 
 // step: -1 = 요약(이번 주 기록 있을 때), 0~3 = 입력 흐름
-function AppContent() {
+function AppContent({ onBackToLanding }) {
   const { user, logout } = useAuth();
   const [step, setStepRaw] = useState(0);
 
@@ -199,7 +201,7 @@ function AppContent() {
             &#9881;
           </button>
           <img src={user.picture} alt={user.name} className="user-avatar" />
-          <button className="logout-btn" onClick={logout} title="로그아웃">
+          <button className="logout-btn" onClick={() => { logout(); onBackToLanding(); }} title="로그아웃">
             &#10005;
           </button>
         </div>
@@ -305,9 +307,20 @@ function restoreSharingToLocalStorage(weekly) {
 }
 
 export default function App() {
+  const [mode, setMode] = useState(null); // null=landing, 'leader', 'newmember', 'admin'
+
+  if (!mode) {
+    return <LandingPage onSelect={setMode} />;
+  }
+
+  if (mode === 'newmember') {
+    return <NewMemberForm onBack={() => setMode(null)} />;
+  }
+
+  // 'leader' 또는 'admin' → 기존 앱 (로그인 후 role에 따라 분기)
   return (
     <AuthProvider>
-      <AppContent />
+      <AppContent onBackToLanding={() => setMode(null)} />
     </AuthProvider>
   );
 }

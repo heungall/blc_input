@@ -480,6 +480,170 @@
   background: rgba(255, 255, 255, 0.4);
 }
 
+/* ── Landing Page ─────────────────────────────────────────────── */
+.landing-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  padding: 20px;
+  background: var(--bg);
+}
+
+.landing-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 40px 24px 32px;
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+}
+
+.landing-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.landing-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.landing-subtitle {
+  font-size: 14px;
+  color: var(--text-light);
+  margin-bottom: 32px;
+}
+
+.landing-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.landing-btn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: var(--radius);
+  text-align: left;
+  transition: all 0.2s;
+  border: 2px solid var(--border);
+  background: var(--card-bg);
+}
+
+.landing-btn:active {
+  transform: scale(0.98);
+}
+
+.landing-btn.leader {
+  border-color: var(--primary-light);
+}
+
+.landing-btn.leader:active {
+  background: var(--primary-light);
+}
+
+.landing-btn.newmember {
+  border-color: var(--success-light);
+}
+
+.landing-btn.newmember:active {
+  background: var(--success-light);
+}
+
+.landing-btn.admin {
+  border-color: #E8E6FF;
+}
+
+.landing-btn.admin:active {
+  background: #E8E6FF;
+}
+
+.landing-btn-icon {
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+.landing-btn-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.landing-btn-desc {
+  font-size: 12px;
+  color: var(--text-light);
+}
+
+/* ── New Member Form ─────────────────────────────────────────── */
+.nm-field {
+  margin-bottom: 18px;
+}
+
+.nm-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.nm-required {
+  color: var(--danger);
+}
+
+.nm-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 15px;
+  transition: border-color 0.2s;
+}
+
+.nm-input:focus {
+  border-color: var(--primary);
+}
+
+.nm-other-input {
+  margin-top: 8px;
+}
+
+.nm-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nm-radio {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  border: 2px solid var(--border);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.nm-radio input[type="radio"] {
+  display: none;
+}
+
+.nm-radio.selected {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+  font-weight: 600;
+}
+
 /* Weekly Summary */
 .summary-header {
   text-align: center;
