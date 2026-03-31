@@ -22,6 +22,7 @@ const SHEET_MEMBERS     = '멤버';
 const SHEET_SUBMISSIONS = '제출기록';
 const SHEET_ATTENDANCE  = '출결';
 const SHEET_NEWCOMERS   = '새신자';
+const SHEET_SETTINGS    = '설정';
 
 // ─── 진입점 ────────────────────────────────────────────────────────────────
 
@@ -43,6 +44,10 @@ function doGet(e) {
       const cellId = sanitizeCellId(e.parameter.cellId);
       if (!cellId) return respond({ error: '유효하지 않은 셀 ID입니다.' });
       return respond(getMembers(cellId));
+    }
+
+    if (action === 'getSettings') {
+      return respond(getSettings());
     }
 
     return respond({ error: '알 수 없는 요청입니다.' });
@@ -133,6 +138,15 @@ function doPost(e) {
 
     if (action === 'submit') {
       return respond(submitRecord(email, data));
+    }
+
+    if (action === 'updateSettings') {
+      // [SECURE] admin만 설정 변경 가능
+      var callerForSettings = getCell(email);
+      if (callerForSettings.error || callerForSettings.role !== 'admin') {
+        return respond({ error: '설정 변경 권한이 없습니다.' });
+      }
+      return respond(updateSettings(data));
     }
 
     if (action === 'dashboard') {
@@ -575,6 +589,57 @@ function getAllNewcomers() {
   return result;
 }
 
+// ─── 설정 ──────────────────────────────────────────────────────────────────
+
+/**
+ * 설정 시트에서 모든 key-value 조회
+ * @returns {Object} { motto, year, ... }
+ */
+function getSettings() {
+  var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = ss.getSheetByName(SHEET_SETTINGS);
+  if (!sheet) return {};
+
+  var rows = sheet.getDataRange().getValues();
+  var result = {};
+  for (var i = 1; i < rows.length; i++) {
+    var key = String(rows[i][0] || '').trim();
+    var value = String(rows[i][1] || '').trim();
+    if (key) result[key] = value;
+  }
+  return result;
+}
+
+/**
+ * 설정 값 업데이트 (admin 전용)
+ * @param {Object} data — { key, value }
+ */
+function updateSettings(data) {
+  var key   = String(data.key || '').trim();
+  var value = String(data.value || '').trim();
+  if (!key || key.length > 50) return { error: '유효하지 않은 키입니다.' };
+  if (value.length > 500) return { error: '값이 너무 깁니다.' };
+
+  // [SECURE] HTML 특수문자 차단
+  if (/[<>]/.test(value)) return { error: '특수문자(<, >)는 사용할 수 없습니다.' };
+
+  var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = ss.getSheetByName(SHEET_SETTINGS);
+  var rows  = sheet.getDataRange().getValues();
+
+  // 기존 키 찾아서 업데이트
+  for (var i = 1; i < rows.length; i++) {
+    if (String(rows[i][0]).trim() === key) {
+      sheet.getRange(i + 1, 2).setValue(value);
+      return { success: true };
+    }
+  }
+
+  // 없으면 새 행 추가
+  sheet.appendRow([key, value]);
+  return { success: true };
+}
+
 // ─── 새신자 등록 ────────────────────────────────────────────────────────────
 
 /**
@@ -710,6 +775,15 @@ function initSheets() {
       'visit_reason', 'visit_channel', 'faith',
       'prev_church', 'heresy_check', 'after_plan', 'agree'
     ]);
+  }
+
+  // 설정 시트
+  var settingsSheet = ss.getSheetByName(SHEET_SETTINGS);
+  if (!settingsSheet) {
+    settingsSheet = ss.insertSheet(SHEET_SETTINGS);
+    settingsSheet.appendRow(['key', 'value']);
+    settingsSheet.appendRow(['motto', '2026년 표어를 입력하세요']);
+    settingsSheet.appendRow(['year', '2026']);
   }
 
   Logger.log('시트 초기화 완료');

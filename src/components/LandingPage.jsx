@@ -1,10 +1,29 @@
+import { useState, useEffect } from 'react';
+import { getSettings } from '../services/api';
+
 export default function LandingPage({ onSelect }) {
+  const [motto, setMotto] = useState('');
+  const [year, setYear] = useState('');
+
+  useEffect(() => {
+    getSettings().then(s => {
+      if (s.motto) setMotto(s.motto);
+      if (s.year) setYear(s.year);
+    }).catch(() => {});
+  }, []);
+
   return (
     <div className="landing-container">
       <div className="landing-card">
         <div className="landing-icon">&#9968;</div>
         <h1 className="landing-title">BLC 홍대교회</h1>
-        <p className="landing-subtitle">홍대청년교회</p>
+
+        {motto && (
+          <div className="landing-motto">
+            {year && <span className="landing-motto-year">{year}</span>}
+            <p className="landing-motto-text">{motto}</p>
+          </div>
+        )}
 
         <div className="landing-options">
           <button className="landing-btn leader" onClick={() => onSelect('leader')}>

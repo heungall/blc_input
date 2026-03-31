@@ -1,4 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { getSettings, updateSettings } from '../services/api';
 import './Dashboard.css';
 
 // ─── 날짜 유틸 ──────────────────────────────────────────────────────────────
@@ -76,6 +78,7 @@ const SECTIONS = [
   { id: 'alerts',    label: '연속 결석' },
   { id: 'status',    label: '멤버 상황' },
   { id: 'newcomers', label: '새신자' },
+  { id: 'settings',  label: '설정' },
 ];
 
 // ─── 메인 컴포넌트 ──────────────────────────────────────────────────────────
@@ -170,6 +173,10 @@ export default function Dashboard({ data, onBack }) {
 
       {activeTab === 'newcomers' && (
         <NewcomersSection newcomers={newcomers || []} />
+      )}
+
+      {activeTab === 'settings' && (
+        <SettingsSection />
       )}
     </div>
   );
@@ -700,6 +707,87 @@ function StatusSection({ cells, members, submissions, selectedCell, setSelectedC
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── [7] 설정 (표어 등) ────────────────────────────────────────────────────
+
+function SettingsSection() {
+  const { user } = useAuth();
+  const [settings, setSettings] = useState({});
+  const [motto, setMotto] = useState('');
+  const [year, setYear] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    getSettings().then(s => {
+      setSettings(s);
+      setMotto(s.motto || '');
+      setYear(s.year || '');
+    }).catch(() => {});
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    setSaved(false);
+    try {
+      await updateSettings(user.idToken, 'motto', motto);
+      await updateSettings(user.idToken, 'year', year);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      console.error('settings save error:', err);
+      alert('저장에 실패했습니다.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="dash-section">
+      <h3>교회 설정</h3>
+
+      <div className="settings-field">
+        <label className="nm-label">연도</label>
+        <input
+          type="text"
+          className="nm-input"
+          placeholder="2026"
+          value={year}
+          onChange={(e) => setYear(e.target.value)}
+        />
+      </div>
+
+      <div className="settings-field">
+        <label className="nm-label">교회 표어</label>
+        <textarea
+          className="nm-input"
+          placeholder="올해의 표어를 입력하세요"
+          value={motto}
+          onChange={(e) => setMotto(e.target.value)}
+          rows={3}
+          style={{ resize: 'vertical' }}
+        />
+      </div>
+
+      <div className="settings-preview">
+        <div className="settings-preview-label">미리보기</div>
+        <div className="landing-motto" style={{ margin: 0 }}>
+          {year && <span className="landing-motto-year">{year}</span>}
+          <p className="landing-motto-text">{motto || '표어를 입력하세요'}</p>
+        </div>
+      </div>
+
+      <button
+        className="btn btn-primary"
+        onClick={handleSave}
+        disabled={saving}
+        style={{ marginTop: '16px' }}
+      >
+        {saving ? '저장 중...' : saved ? '저장 완료!' : '저장'}
+      </button>
     </div>
   );
 }

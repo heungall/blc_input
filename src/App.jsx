@@ -199,13 +199,13 @@ function AppContent({ onBackToLanding }) {
               &#9776;
             </button>
           )}
-          <button className="header-icon-btn" onClick={() => { setShowHelp(true); setShowDashboard(false); setShowMemberManage(false); }} title="도움말">
-            ?
-          </button>
           <button className="header-icon-btn" onClick={() => { setShowMemberManage(true); setShowDashboard(false); setShowHelp(false); }} title="멤버 관리">
             &#9881;
           </button>
           <img src={user.picture} alt={user.name} className="user-avatar" />
+          <button className="header-icon-btn" onClick={() => { setShowHelp(true); setShowDashboard(false); setShowMemberManage(false); }} title="도움말">
+            ?
+          </button>
           <button className="logout-btn" onClick={() => { logout(); onBackToLanding(); }} title="로그아웃">
             &#10005;
           </button>

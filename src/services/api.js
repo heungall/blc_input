@@ -62,6 +62,22 @@ export async function submitNewcomer(data) {
   return postAction({ action: 'newcomer', ...data });
 }
 
+/**
+ * 설정 조회 (인증 불필요)
+ */
+export async function getSettings() {
+  if (!SCRIPT_URL) throw new Error('VITE_APPS_SCRIPT_URL 환경변수가 설정되지 않았습니다.');
+  const res = await fetch(SCRIPT_URL + '?action=getSettings', { redirect: 'follow' });
+  return res.json();
+}
+
+/**
+ * 설정 업데이트 (admin 전용)
+ */
+export async function updateSettings(idToken, key, value) {
+  return postAction({ action: 'updateSettings', idToken, key, value });
+}
+
 // ─── 내부 헬퍼 ──────────────────────────────────────────────────────────────
 
 async function postAction(body) {

@@ -539,6 +539,22 @@
   margin-bottom: 14px;
 }
 
+/* ── 설정 ─────────────────────────────────────────────────────── */
+.settings-field {
+  margin-bottom: 16px;
+}
+
+.settings-preview {
+  margin-top: 16px;
+}
+
+.settings-preview-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-light);
+  margin-bottom: 8px;
+}
+
 /* ── 새신자 현황 ──────────────────────────────────────────────── */
 .dash-newcomer-list {
   display: flex;
