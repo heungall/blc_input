@@ -197,7 +197,7 @@ function AppContent({ onBackToLanding }) {
               &#9776;
             </button>
           )}
-          <button className="header-icon-btn" onClick={() => setShowMemberManage(true)} title="멤버 관리">
+          <button className="header-icon-btn" onClick={() => { setShowMemberManage(true); setShowDashboard(false); }} title="멤버 관리">
             &#9881;
           </button>
           <img src={user.picture} alt={user.name} className="user-avatar" />
